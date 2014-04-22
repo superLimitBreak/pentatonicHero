@@ -45,8 +45,8 @@ def note_to_text(note):
     """
     return '{0}{1}'.format(
         LOOKUP_NOTE_STR[note % NUM_NOTES_IN_OCTAVE],
-        int(note/NUM_NOTES_IN_OCTAVE)
-    )  # INTEGER DEVISION REQUIRED!!!
+        note//NUM_NOTES_IN_OCTAVE
+    )
 
 
 def parse_note(item):
@@ -85,7 +85,7 @@ class Scale(object):
         Calculate the distance in semitones from the scale's root
         """
         index = scale_index % self.len
-        octave = int(scale_index / self.len)  # INTEGER DEVISION NEEDED!!!
+        octave = scale_index // self.len
         return self.scale[index] + (octave * NUM_NOTES_IN_OCTAVE)
 
 
@@ -303,7 +303,7 @@ class App:
             note_to_stdout(note, velocity)
 
         self.players = {
-            'player1': HeroInput(joy_input, parse_note('C#3'), scales['pentatonic'], note_to_midi),  # note_to_stdout
+            'player1': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], note_to_midi),  # note_to_stdout
         }
 
         self.running = True
