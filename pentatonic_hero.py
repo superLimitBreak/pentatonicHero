@@ -9,6 +9,11 @@ from collections import namedtuple
 from operator import attrgetter
 from itertools import chain
 
+import logging
+log = logging.getLogger(__name__)
+
+
+
 TITLE = 'Pentatonic Hero'
 
 
@@ -67,9 +72,26 @@ def parse_note(item):
         raise Exception('Unable to parse note {0}'.format(item))
 
 
-def note_to_stdout(note, velocity=None):
-    if note:
-        print('{0} - {1}'.format(note_to_text(note), velocity))
+
+def midi_pitch(pitch_bend_value, channel=0):
+    """
+    pitch bend is a float from -1 to 1 (0 is no change)
+    A special midi command needs to be sent (0xEn) with a 14-bit encoded range (+/- 8192)
+    
+    http://forum.arduino.cc/index.php?topic=119790.0
+    http://www.tonalsoft.com/pub/pitch-bend/pitch.2005-08-24.17-00.aspx
+    
+    >>> midi_pitch(0)
+    (0xE0, 0x00, 0x40)
+    >>> midi_pitch(0, channel=1)
+    (0xE1, 0x00, 0x40)
+    >>> midi_pitch(1)
+    (0xE0, 0x7F, 0x7F)
+    >>> midi_pitch(-1)
+    (0xE0, 0x01, 0x00)
+    """
+    change = 0x2000 + int(pitch_bend_value * 0x1FFF);
+    return (0xE0 + channel, change & 0x7F, (change >> 7) & 0x7F)
 
 
 class Scale(object):
@@ -150,6 +172,36 @@ joy_input = hero_control_factory(
     pitch_bend_axis=1,
 )
 
+# Midi Wrapper -----------------------------------------------------------------
+
+class PygameMidiWrapper(object):
+    MidiDevice = namedtuple('MidiDevice', ('id', 'interf', 'name', 'input', 'output', 'opened'))
+
+    @staticmethod
+    def get_midi_device(id):
+        return PygameMidiWrapper.MidiDevice(*((id,)+pygame.midi.get_device_info(id)))
+    
+    @staticmethod
+    def get_midi_devices():
+        return (PygameMidiWrapper.get_midi_device(id) for id in range(pygame.midi.get_count()))
+    
+    def __init__(self, pygame_midi_output, channel=0):
+        self.midi = pygame_midi_output
+        self.channel = channel
+
+    def note(self, note, velocity=0):
+        """
+        note int, velocity float 0->1
+        """
+        if not note:
+            return
+        log.debug('note: {0} - {1}'.format(note_to_text(note), velocity))
+        self.midi.write_short(0x90 + self.channel, note, int(velocity * 127))
+
+    def pitch(self, pitch=0):
+        log.debug('pitch: {1}'.format(pitch))
+        self.midi.write_short(*midi_pitch(pitch, channel=self.channel))
+
 
 # Input Logic & State  ---------------------------------------------------------
 
@@ -157,11 +209,11 @@ class HeroInput(object):
 
     PLAYING_DECAY = -0.1
 
-    def __init__(self, input_event_identifyers, starting_note, scale, output):
+    def __init__(self, input_event_identifyers, starting_note, scale, midi_output):
         self.input_event_identifyers = input_event_identifyers
         self._starting_note = starting_note
         self.scale = scale
-        self.output = output
+        self.midi_output = midi_output
 
         self.enable_hammer_ons_and_pulloffs = True
 
@@ -251,17 +303,18 @@ class HeroInput(object):
             self.send_pitch_bend(self.pitch_bend)
 
     def send_note(self, note=None):
-        self.output(self.previous_note, None)
+        self.midi_output.note(self.previous_note, velocity=0)
         self.previous_note = note
         if note:
             if self.playing_power == 1 or \
                self.playing_power < 1 and self.enable_hammer_ons_and_pulloffs:
-                self.output(note, self.playing_power)
+                self.midi_output.note(note, self.playing_power)
 
-    def send_pitch_bend(self, pitch_bend):
-        # TODO - cant use .output because we want to send control signals not notes
-        #self.output()
-        print('pitch bend: {0}'.format(pitch_bend))
+    def send_pitch_bend(self, pitch):
+        """
+        """
+        self.midi_output.pitch(pitch)
+
 
 # Pygame -----------------------------------------------------------------------
 
@@ -282,28 +335,17 @@ class App:
 
         # Init midi
         pygame.midi.init()
-        MidiDevice = namedtuple('MidiDevice', ('id', 'interf', 'name', 'input', 'output', 'opened'))
-        def get_midi_device(id):
-            return MidiDevice(*((id,)+pygame.midi.get_device_info(id)))
+
         midi_output_device_id = pygame.midi.get_default_output_id()
-        for midi_device in (get_midi_device(id) for id in range(pygame.midi.get_count())):
+        for midi_device in PygameMidiWrapper.get_midi_devices():
             if 'PentatonicHero'.lower() in midi_device.name.decode('utf-8').lower() and bool(midi_device.output):
                 midi_output_device_id = midi_device.id
-        print ("using midi output - {0}".format(get_midi_device(midi_output_device_id)))
+        print ("using midi output - {0}".format(PygameMidiWrapper.get_midi_device(midi_output_device_id)))
         self.midi_out = pygame.midi.Output(midi_output_device_id)
-        self.midi_out.set_instrument(0)
-
-        def note_to_midi(note, velocity=None):
-            if not note:
-                return
-            if velocity:
-                self.midi_out.note_on(note, int(velocity * 127))
-            else:
-                self.midi_out.note_off(note)
-            note_to_stdout(note, velocity)
 
         self.players = {
-            'player1': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], note_to_midi),  # note_to_stdout
+            'player1': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], PygameMidiWrapper(self.midi_out, channel=0)),
+            #'player2': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], PygameMidiWrapper(self.midi_out, channel=1)),
         }
 
         self.running = True
@@ -322,7 +364,7 @@ class App:
         while self.running:
             self.clock.tick(100)
             self._loop()
-        del self.midi_out
+        
         pygame.midi.quit()
         pygame.quit()
 
@@ -333,4 +375,5 @@ class App:
 # Main -------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     App().run()
