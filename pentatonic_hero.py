@@ -3,174 +3,19 @@ import pygame
 import pygame.midi
 from pygame.locals import *
 
-import re
-
 from collections import namedtuple
 from operator import attrgetter
-from itertools import chain
+
+from music import note_to_text, parse_note, midi_pitch, SCALES
+from controls import key_input, joy1_input
 
 import logging
 log = logging.getLogger(__name__)
 
-
+# Contants ---------------------------------------------------------------------
 
 TITLE = 'Pentatonic Hero'
 
-
-# Music Note Utils -------------------------------------------------------------
-
-LOOKUP_NOTE_STR = {
-    0: 'C',
-    1: 'C#',
-    2: 'D',
-    3: 'D#',
-    4: 'E',
-    5: 'F',
-    6: 'F#',
-    7: 'G',
-    8: 'G#',
-    9: 'A',
-    10: 'A#',
-    11: 'B',
-}
-LOOKUP_STR_NOTE = {text: note for note, text in LOOKUP_NOTE_STR.items()}
-NUM_NOTES_IN_OCTAVE = len(LOOKUP_NOTE_STR)
-
-
-def note_to_text(note):
-    """
-    >>> note_to_text(0)
-    'C0'
-    >>> note_to_text(1)
-    'C#0'
-    >>> note_to_text(12)
-    'C1'
-    >>> note_to_text(13)
-    'C#1'
-    """
-    return '{0}{1}'.format(
-        LOOKUP_NOTE_STR[note % NUM_NOTES_IN_OCTAVE],
-        note//NUM_NOTES_IN_OCTAVE
-    )
-
-
-def parse_note(item):
-    """
-    >>> parse_note('C0')
-    0
-    >>> parse_note('C1')
-    12
-    >>> parse_note('C#0')
-    1
-    >>> parse_note('C#1')
-    13
-    """
-    try:
-        note_str, octave = re.match(r'([ABCDEFG]#?)(\d)', item.upper()).groups()
-        return LOOKUP_STR_NOTE[note_str] + (int(octave) * NUM_NOTES_IN_OCTAVE)
-    except Exception:
-        raise Exception('Unable to parse note {0}'.format(item))
-
-
-
-def midi_pitch(pitch_bend_value, channel=0):
-    """
-    pitch bend is a float from -1 to 1 (0 is no change)
-    A special midi command needs to be sent (0xEn) with a 14-bit encoded range (+/- 8192)
-    
-    http://forum.arduino.cc/index.php?topic=119790.0
-    http://www.tonalsoft.com/pub/pitch-bend/pitch.2005-08-24.17-00.aspx
-    
-    >>> midi_pitch(0)
-    (0xE0, 0x00, 0x40)
-    >>> midi_pitch(0, channel=1)
-    (0xE1, 0x00, 0x40)
-    >>> midi_pitch(1)
-    (0xE0, 0x7F, 0x7F)
-    >>> midi_pitch(-1)
-    (0xE0, 0x01, 0x00)
-    """
-    change = 0x2000 + int(pitch_bend_value * 0x1FFF);
-    return (0xE0 + channel, change & 0x7F, (change >> 7) & 0x7F)
-
-
-class Scale(object):
-    def __init__(self, scale):
-        self.scale = scale
-
-    @property
-    def len(self):
-        return len(self.scale)
-
-    def scale_note(self, scale_index):
-        """
-        Calculate the distance in semitones from the scale's root
-        """
-        index = scale_index % self.len
-        octave = scale_index // self.len
-        return self.scale[index] + (octave * NUM_NOTES_IN_OCTAVE)
-
-
-scales = {
-    'pentatonic': Scale([0, 3, 5, 7, 10]),
-}
-
-
-# Controls ---------------------------------------------------------------------
-
-InputEvent = namedtuple('InputEvent', ['type', 'attr', 'value', 'event_func_name', 'event_func_args'])
-
-
-def hero_control_factory(
-        event_type,
-        event_down,
-        event_up,
-        button_strum,
-        button_transpose_increment,
-        button_transpose_decrement,
-        button_notes,
-        pitch_bend_axis = None,
-    ):
-    def _button_note(button_index, event_value):
-        return (
-            InputEvent(event_down, event_type, event_value, 'ctrl_note_down', (button_index,)),
-            InputEvent(event_up, event_type, event_value, 'ctrl_note_up', (button_index,)),
-        )
-    control_config = (
-        InputEvent(event_down, event_type, button_strum, 'ctrl_strum', ()),
-        InputEvent(event_down, event_type, button_transpose_increment, 'ctrl_transpose_increment', ()),
-        InputEvent(event_down, event_type, button_transpose_decrement, 'ctrl_transpose_decrement', ()),
-    ) + tuple(chain(*(_button_note(button_index, event_value) for button_index, event_value in enumerate(button_notes))))
-    if pitch_bend_axis:
-        control_config += (InputEvent(JOYAXISMOTION, 'axis', pitch_bend_axis, 'ctrl_pitch_bend', ()),)
-    return control_config
-
-key_input = hero_control_factory(
-    event_type='key',
-    event_down=KEYDOWN,
-    event_up=KEYUP,
-    button_strum=pygame.K_SPACE,
-    button_transpose_increment=pygame.K_p,
-    button_transpose_decrement=pygame.K_o,
-    button_notes=(
-        pygame.K_q,
-        pygame.K_w,
-        pygame.K_e,
-        pygame.K_r,
-        pygame.K_t,
-    ),
-)
-
-joy_input = hero_control_factory(
-    event_type='button',
-    event_down=JOYBUTTONDOWN,
-    event_up=JOYBUTTONUP,
-    button_strum=6,
-    button_transpose_increment=7,
-    button_transpose_decrement=8,
-    button_notes=(1, 2, 3, 4, 5),
-    pitch_bend_axis=1,
-)
 
 # Midi Wrapper -----------------------------------------------------------------
 
@@ -180,11 +25,11 @@ class PygameMidiWrapper(object):
     @staticmethod
     def get_midi_device(id):
         return PygameMidiWrapper.MidiDevice(*((id,)+pygame.midi.get_device_info(id)))
-    
+
     @staticmethod
     def get_midi_devices():
         return (PygameMidiWrapper.get_midi_device(id) for id in range(pygame.midi.get_count()))
-    
+
     def __init__(self, pygame_midi_output, channel=0):
         self.midi = pygame_midi_output
         self.channel = channel
@@ -344,7 +189,7 @@ class App:
         self.midi_out = pygame.midi.Output(midi_output_device_id)
 
         self.players = {
-            'player1': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], PygameMidiWrapper(self.midi_out, channel=0)),
+            'player1': HeroInput(key_input, parse_note('C#3'), SCALES['pentatonic'], PygameMidiWrapper(self.midi_out, channel=0)),
             #'player2': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], PygameMidiWrapper(self.midi_out, channel=1)),
         }
 
@@ -364,7 +209,7 @@ class App:
         while self.running:
             self.clock.tick(100)
             self._loop()
-        
+
         pygame.midi.quit()
         pygame.quit()
 
