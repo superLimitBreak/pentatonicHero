@@ -5,29 +5,34 @@ from operator import attrgetter
 
 from music import note_to_text, parse_note, SCALES
 from pygame_midi_wrapper import PygameMidiWrapper
-from controls import key_input, joy1_input
+import controls
+#from controls import key_input, joy1_input
 
 import logging
 log = logging.getLogger(__name__)
 
 # Contants ---------------------------------------------------------------------
 
+VERSION = '0.1'
+
 TITLE = 'Pentatonic Hero'
 
+DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
+DEFAULT_HAMMER_DECAY = -0.1
 
 # Input Logic & State  ---------------------------------------------------------
 
+
 class HeroInput(object):
 
-    PLAYING_DECAY = -0.1
-
-    def __init__(self, input_event_identifyers, root_note, scale, midi_output):
+    def __init__(self, input_event_identifyers, root_note, scale, midi_output, hammer_ons=True, hammer_decay=DEFAULT_HAMMER_DECAY):
         self.input_event_identifyers = input_event_identifyers
         self.root_note = root_note
         self.scale = scale
         self.midi_output = midi_output
 
-        self.enable_hammer_ons_and_pulloffs = True
+        self.hammer_decay = hammer_decay
+        self.enable_hammer_ons_and_pulloffs = hammer_ons
 
         self.button_states = [False for i in range(5)]  # TODO: remove hard coded majic number for buttons
         self.scale_index_offset = 0
@@ -109,7 +114,7 @@ class HeroInput(object):
             # Play if note changed or strum
             if current_note != self.previous_note or self.playing_power >= 1:
                 self._send_note(current_note)
-                self.playing_power += self.PLAYING_DECAY
+                self.playing_power += self.hammer_decay
         if self.pitch_bend != self.previous_pitch_bend:
             self.previous_pitch_bend = self.pitch_bend
             self._send_pitch_bend(self.pitch_bend)
@@ -131,7 +136,7 @@ class HeroInput(object):
 # Pygame -----------------------------------------------------------------------
 
 class App:
-    def __init__(self):
+    def __init__(self, options):
         pygame.init()
         pygame.display.set_caption(TITLE)
 
@@ -146,10 +151,17 @@ class App:
             joystick.init()
 
         # Init midi
-        self.midi_out = PygameMidiWrapper.open_device('PentatonicHero')
+        self.midi_out = PygameMidiWrapper.open_device(options.midi_port_name)
 
         self.players = {
-            'player1': HeroInput(key_input, parse_note('C#3'), SCALES['pentatonic'], PygameMidiWrapper(self.midi_out, channel=0)),
+            'player1': HeroInput(
+                options.input_profile,
+                options.root_note,
+                options.scale,
+                PygameMidiWrapper(self.midi_out, channel=options.channel),
+                options.hammer_ons,
+                options.hammer_decay,
+            ),
             #'player2': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], PygameMidiWrapper(self.midi_out, channel=1)),
         }
 
@@ -159,7 +171,7 @@ class App:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.quit()
-            #print(event)
+            log.debug(event)
             for player in self.players.values():
                 player.update_state(event)
         for player in self.players.values():
@@ -179,6 +191,48 @@ class App:
 
 # Main -------------------------------------------------------------------------
 
+def get_args():
+    """
+    Command line argument handling
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog=__name__,
+        description="""Pentetonic Hero
+        Connect your Guitar Hero controller to a Midi synth
+        """,
+        epilog=""""""
+    )
+    #parser.add_parser('input', nargs='*', help='Define a player input')   # first subgroup
+    #parser_input = argparse.ArgumentParser(prog='input')
+    parser_input = parser
+
+    def select_input_profile(input_profile_name):
+        try:
+            return getattr(controls, input_profile_name)
+        except AttributeError:
+            log.warn('Unable to locate input_profile {0}. Falled back to keyboard input'.format(input_profile_name))
+            return controls.key_input
+    def select_scale(scale_string):
+        return SCALES[scale_string]
+
+    parser_input.add_argument('--input_profile', action='store', type=select_input_profile, help='input profile name (defined in controlers.py)', default='key_input')
+    parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='C3')
+    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale , help='scale to use (defined in music.py)', default='pentatonic')
+    parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too', default=0)
+    parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
+    parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=-0.1)
+
+    parser.add_argument('--midi_port_name', action='store', help='Output port name to attach too', default=DEFAULT_MIDI_PORT_NAME)
+
+    parser.add_argument('--log_level', type=int,  help='log level', default=logging.INFO)
+    parser.add_argument('--version', action='version', version=VERSION)
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    App().run()
+    args = get_args()
+    logging.basicConfig(level=args.log_level)
+    App(args).run()
