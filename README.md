@@ -14,6 +14,14 @@ We wanted to encourage people to pick up musical instruments and get rocking. Yo
 _Pentatonic Hero_ was created so a live band could back
 two participating audience members, armed with familar _Guitar Hero_ controllers, that solo against each other while the crowds cheer their favourite participant.
 
+Features
+--------
+
+* Multiple guitars (outputing to differnt midi channels)
+* Hammer-on's and pull-off's (the velocity of the hit decreases each time)
+* Pitch bending
+* Scale transposing (using start select buttons). Keeps in key but allows the performer to reach a greater range of notes.
+* Root note (key) selection (hold down all the note buttons and use start/select to shift root note)
 
 Setup
 -----
@@ -25,13 +33,18 @@ Setup
 	* Free software synths 
 		* [FluidSynth](http://en.wikipedia.org/wiki/FluidSynth)
 			* linux `apt-get install qsynth`
-			* osx `brew install fluidsynth` 
-		* [Komplete Player](http://www.native-instruments.com/en/products/komplete/samplers/kontakt-5-player/) (I use Native Instruments 'Rock Guitar' bundled with their basic 'Komplete Elements' as this has simulated fret noise).
-* Recommended Guitar Hero Controller connected to your PC
-    * With PS2 USB adaptor
+			* osx `brew install fluidsynth`
+			* [windows](http://fluidsynth.org/)
+		* [Komplete Player](http://www.native-instruments.com/en/products/komplete/samplers/kontakt-5-player/) (windows and osx)
+			* I use _Native Instruments_ 'Rock Guitar' bundled with their basic 'Kontact 5 Player' as this has simulated fret noise.
+* Recommended _Guitar Hero_ Controller connected to your PC
+    * With Playstation 2 USB adaptor and Playstation 2 wired guitars
     * Directly with USB (Xbox 360 wired Guitar hero controller)
+    * Other guitar controllers? wireless?
 
 ### Install
+
+Clone the repository with git
 
 * `git clone https://github.com/calaldees/PentatonicHero.git`
 
@@ -42,12 +55,13 @@ Setup
 	* [Pygame](http://www.pygame.org/download.shtml)
 * Setup Virtual Midi port
 	* ???
+	* Add a new port `PentatonicHero` (the name is important for auto selecting the correct port)
 
 #### Osx
 
 * Install [homebrew](http://brew.sh/) package manager
 	* You may need to `brew install git` and other basic dev tools
-* `make install_osx` This will install python3 and pygame
+* `make install_osx` This will install python3 and pygame. [Reference](http://florian-berger.de/en/articles/installing-pygame-for-python-3-on-os-x)
 
 * Setup Virtual Midi port
     * Open `Audio MIDI Setup`
@@ -55,15 +69,22 @@ Setup
     * ICA Driver -> Show Info
     * Add a new port `PentatonicHero` (the name is important for auto selecting the correct port)
 
-#### Linux (Ubuntu)
+#### Linux (Ubuntu 13.10)
 
-* ???
+* `make install_linux`
+*  ???
 
 ### Controller Setup
 
-(Skip this if you just want to try it with the keyboard)
+#### Default keyboard keys
 
-* Run pentatonic hero with controller debugging enabled
+* notes (q,w,e,r,t)
+* strum (spacebar)
+* transpose (o,p)
+
+#### With controler
+
+* Run _Pentatonic Hero_ with controller debugging enabled
 	* `python3 pentatonic_hero.py --show_controls`
 	* Observe the button numbers and axis for the pitch bend
 * Edit `controlers.py` to make to your correct joystick and button setup
