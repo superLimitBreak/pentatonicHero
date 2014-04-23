@@ -1,12 +1,10 @@
 #!/usr/local/bin/python3
 import pygame
-import pygame.midi
-from pygame.locals import *
 
-from collections import namedtuple
 from operator import attrgetter
 
-from music import note_to_text, parse_note, midi_pitch, SCALES
+from music import note_to_text, parse_note, SCALES
+from pygame_midi_wrapper import PygameMidiWrapper
 from controls import key_input, joy1_input
 
 import logging
@@ -15,47 +13,6 @@ log = logging.getLogger(__name__)
 # Contants ---------------------------------------------------------------------
 
 TITLE = 'Pentatonic Hero'
-
-
-# Midi Wrapper -----------------------------------------------------------------
-
-class PygameMidiWrapper(object):
-    MidiDevice = namedtuple('MidiDevice', ('id', 'interf', 'name', 'input', 'output', 'opened'))
-
-    @staticmethod
-    def get_device(id):
-        return PygameMidiWrapper.MidiDevice(*((id,)+pygame.midi.get_device_info(id)))
-
-    @staticmethod
-    def get_devices():
-        return (PygameMidiWrapper.get_device(id) for id in range(pygame.midi.get_count()))
-
-    @staticmethod
-    def open_device(name=None, io='output'):
-        midi_output_device_id = pygame.midi.get_default_output_id()
-        if name:
-            for midi_device in PygameMidiWrapper.get_devices():
-                if name.lower() in midi_device.name.decode('utf-8').lower() and bool(midi_device.output):
-                    midi_output_device_id = midi_device.id
-        log.info("using midi output - {0}".format(PygameMidiWrapper.get_device(midi_output_device_id)))
-        return pygame.midi.Output(midi_output_device_id)
-
-    def __init__(self, pygame_midi_output, channel=0):
-        self.midi = pygame_midi_output
-        self.channel = channel
-
-    def note(self, note, velocity=0):
-        """
-        note int, velocity float 0->1
-        """
-        if not note:
-            return
-        log.debug('note: {0} - {1}'.format(note_to_text(note), velocity))
-        self.midi.write_short(0x90 + self.channel, note, int(velocity * 127))
-
-    def pitch(self, pitch=0):
-        log.debug('pitch: {1}'.format(pitch))
-        self.midi.write_short(*midi_pitch(pitch, channel=self.channel))
 
 
 # Input Logic & State  ---------------------------------------------------------
@@ -189,7 +146,6 @@ class App:
             joystick.init()
 
         # Init midi
-        pygame.midi.init()
         self.midi_out = PygameMidiWrapper.open_device('PentatonicHero')
 
         self.players = {
@@ -201,7 +157,7 @@ class App:
 
     def _loop(self):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.quit()
             #print(event)
             for player in self.players.values():
