@@ -80,6 +80,13 @@ class Scale(object):
 
 SCALES = {
     'pentatonic': Scale([0, 3, 5, 7, 10]),
+    'ionian': Scale([0, 2, 4, 5, 7, 9, 11]),  # major scale
+    'dorian': Scale([0, 2, 3, 5, 7, 9, 10]),
+    'lidian': Scale([0, 1, 3, 5, 7, 8, 10]),
+    'frigian': Scale([0, 2, 4, 6, 7, 9, 11]),
+    'mixolidian': Scale([0, 2, 4, 5, 7, 9, 10]),
+    'aonian': Scale([0, 2, 3, 5, 7, 8, 10]),  # relative minor
+    'unknown': Scale([0, 1, 3, 5, 6, 8, 10]),
 }
 
 
