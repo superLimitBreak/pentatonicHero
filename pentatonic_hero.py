@@ -206,7 +206,7 @@ def get_args():
 
     parser = argparse.ArgumentParser(
         prog=__name__,
-        description="""Pentetonic Hero
+        description="""Pentetonic Hero -
         Connect your Guitar Hero controller to a Midi synth
         """,
         epilog=""""""

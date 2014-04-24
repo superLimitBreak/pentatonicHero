@@ -78,16 +78,20 @@ Clone the repository with git
 
 #### Default keyboard keys
 
-* notes (q,w,e,r,t)
-* strum (spacebar)
-* transpose (o,p)
+* Notes (q,w,e,r,t) [hold note button and strum to play note]
+* Strum (spacebar)
+* Transpose in scale (o,p)
+* _(Hold all notes and then transpose+/- to change root_note on the fly)_
+* _(Pitch bend not supported on keyboard)_
 
 #### With controler
 
 * Run _Pentatonic Hero_ with controller debugging enabled
-	* `python3 pentatonic_hero.py --show_controls`
+	* `python3 pentatonic_hero.py --log_level 0`
 	* Observe the button numbers and axis for the pitch bend
 * Edit `controlers.py` to make to your correct joystick and button setup
+	* Add a new `my_joy = _hero_control_factory(...)`
+	* Run `pentatonic_hero.py --input_profile my_joy`
 
 ### Run
 
@@ -95,8 +99,6 @@ Clone the repository with git
 * `python3 pentatonic_hero.py`
 * Rock the **** out!
 
-### Options
+### More Options
 
-* Multiple controllers
-* Multiple channels
-
+`python3 pentatonic_hero.py --help`
