@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 pygame.midi.init()
 
+
 # Midi Wrapper -----------------------------------------------------------------
 
 class PygameMidiWrapper(object):
@@ -24,13 +25,16 @@ class PygameMidiWrapper(object):
 
     @staticmethod
     def open_device(name=None, io='output'):
-        midi_output_device_id = pygame.midi.get_default_output_id()
+        midi_device_id = pygame.midi.get_default_output_id()
         if name:
             for midi_device in PygameMidiWrapper.get_devices():
-                if name.lower() in midi_device.name.decode('utf-8').lower() and bool(midi_device.output):
-                    midi_output_device_id = midi_device.id
-        log.info("using midi output - {0}".format(PygameMidiWrapper.get_device(midi_output_device_id)))
-        return pygame.midi.Output(midi_output_device_id)
+                if name.lower() in midi_device.name.decode('utf-8').lower() and bool(getattr(midi_device, io)):
+                    midi_device_id = midi_device.id
+        log.info("using midi {0} - {1}".format(io, PygameMidiWrapper.get_device(midi_device_id)))
+        if io == 'output':
+            return pygame.midi.Output(midi_device_id)
+        if io == 'input':
+            return pygame.midi.Input(midi_device_id)
 
     def __init__(self, pygame_midi_output, channel=0):
         self.midi = pygame_midi_output
@@ -48,4 +52,3 @@ class PygameMidiWrapper(object):
     def pitch(self, pitch=0):
         log.info('pitch: {1}'.format(pitch))
         self.midi.write_short(*midi_pitch(pitch, channel=self.channel))
-
