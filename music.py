@@ -21,39 +21,40 @@ LOOKUP_NOTE_STR = {
 }
 LOOKUP_STR_NOTE = {text: note for note, text in LOOKUP_NOTE_STR.items()}
 NUM_NOTES_IN_OCTAVE = len(LOOKUP_NOTE_STR)
+OFFSET_FROM_C0 = NUM_NOTES_IN_OCTAVE * 2
 
 
 def note_to_text(note):
     """
     >>> note_to_text(0)
+    'C-2'
+    >>> note_to_text(24)
     'C0'
-    >>> note_to_text(1)
-    'C#0'
-    >>> note_to_text(12)
-    'C1'
-    >>> note_to_text(13)
-    'C#1'
+    >>> note_to_text(60)
+    'C3'
+    >>> note_to_text(61)
+    'C#3'
     """
     return '{0}{1}'.format(
         LOOKUP_NOTE_STR[note % NUM_NOTES_IN_OCTAVE],
-        note//NUM_NOTES_IN_OCTAVE
+        (note-OFFSET_FROM_C0)//NUM_NOTES_IN_OCTAVE
     )
 
 
 def parse_note(item):
     """
-    >>> parse_note('C0')
+    >>> parse_note('C-2')
     0
-    >>> parse_note('C1')
-    12
-    >>> parse_note('C#0')
-    1
-    >>> parse_note('C#1')
-    13
+    >>> parse_note('C0')
+    24
+    >>> parse_note('C3')
+    60
+    >>> parse_note('C#3')
+    61
     """
     try:
         note_str, octave = re.match(r'([ABCDEFG]#?)(\d)', item.upper()).groups()
-        return LOOKUP_STR_NOTE[note_str] + (int(octave) * NUM_NOTES_IN_OCTAVE)
+        return LOOKUP_STR_NOTE[note_str] + (int(octave) * NUM_NOTES_IN_OCTAVE) + OFFSET_FROM_C0
     except Exception:
         raise Exception('Unable to parse note {0}'.format(item))
 

@@ -55,6 +55,8 @@ Clone the repository with git
 	* [Pygame](http://www.pygame.org/download.shtml)
 * Setup Virtual Midi port
 	* ???
+		* [VirtualMidiSynth](http://coolsoft.altervista.org/en/virtualmidisynth?page=99999999#download)
+		* [loobe1](http://www.nerds.de/en/loopbe1.html)
 	* Add a new port `PentatonicHero` (the name is important for auto selecting the correct port)
 
 #### Osx
