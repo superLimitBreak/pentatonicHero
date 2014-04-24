@@ -34,7 +34,7 @@ Setup
 		* [FluidSynth](http://en.wikipedia.org/wiki/FluidSynth)
 			* linux `apt-get install qsynth`
 			* osx `brew install fluidsynth`
-			* [windows](http://fluidsynth.org/)
+			* [windows](http://sourceforge.net/projects/qsynth/)
 		* [Komplete Player](http://www.native-instruments.com/en/products/komplete/samplers/kontakt-5-player/) (windows and osx)
 			* I use _Native Instruments_ 'Rock Guitar' bundled with their basic 'Kontact 5 Player' as this has simulated fret noise.
 * Recommended _Guitar Hero_ Controller connected to your PC
