@@ -162,7 +162,14 @@ class App:
                 options.hammer_ons,
                 options.hammer_decay,
             ),
-            #'player2': HeroInput(key_input, parse_note('C#3'), scales['pentatonic'], PygameMidiWrapper(self.midi_out, channel=1)),
+            'player2': HeroInput(
+                options.input_profile2,
+                options.root_note,
+                options.scale,
+                PygameMidiWrapper(self.midi_out, channel=options.channel+1),
+                options.hammer_ons,
+                options.hammer_decay,
+            ),
         }
 
         self.running = True
@@ -212,15 +219,16 @@ def get_args():
         try:
             return getattr(controls, input_profile_name)
         except AttributeError:
-            log.warn('Unable to locate input_profile {0}. Falled back to keyboard input'.format(input_profile_name))
-            return controls.key_input
+            log.warn('Unable to locate input_profile {0}.'.format(input_profile_name))
+            return controls.null_input
     def select_scale(scale_string):
         return SCALES[scale_string]
 
-    parser_input.add_argument('--input_profile', action='store', type=select_input_profile, help='input profile name (defined in controlers.py)', default='key_input')
+    parser_input.add_argument('--input_profile', action='store', type=select_input_profile, help='input1 profile name (defined in controlers.py)', default='key_input')
+    parser_input.add_argument('--input_profile2', action='store', type=select_input_profile, help='input2 profile name (defined in controlers.py)', default='null_input')
     parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='C3')
-    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale , help='scale to use (defined in music.py)', default='pentatonic')
-    parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too', default=0)
+    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale, help='scale to use (defined in music.py)', default='pentatonic')
+    parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too (player2 is automatically +1)', default=0)
     parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=-0.1)
 

@@ -44,6 +44,8 @@ def _hero_control_factory(
 
 # Control Definitions ----------------------------------------------------------
 
+null_input = ()
+
 key_input = _hero_control_factory(
     event_type='key',
     event_down=pygame.KEYDOWN,
@@ -71,4 +73,4 @@ joy1_input = _hero_control_factory(
     pitch_bend_axis=1,
 )
 
-joy2_input = None
+joy2_input = ()
