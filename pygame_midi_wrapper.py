@@ -7,8 +7,6 @@ from music import note_to_text, midi_pitch
 import logging
 log = logging.getLogger(__name__)
 
-pygame.midi.init()
-
 
 # Midi Wrapper -----------------------------------------------------------------
 

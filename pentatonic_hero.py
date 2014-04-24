@@ -6,7 +6,6 @@ from operator import attrgetter
 from music import note_to_text, parse_note, SCALES
 from pygame_midi_wrapper import PygameMidiWrapper
 import controls
-#from controls import key_input, joy1_input
 
 import logging
 log = logging.getLogger(__name__)
@@ -151,6 +150,7 @@ class App:
             joystick.init()
 
         # Init midi
+        pygame.midi.init()
         self.midi_out = PygameMidiWrapper.open_device(options.midi_port_name)
 
         self.players = {
@@ -221,6 +221,7 @@ def get_args():
         except AttributeError:
             log.warn('Unable to locate input_profile {0}.'.format(input_profile_name))
             return controls.null_input
+
     def select_scale(scale_string):
         return SCALES[scale_string]
 
