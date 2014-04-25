@@ -79,14 +79,31 @@ class Scale(object):
 
 
 SCALES = {
-    'pentatonic': Scale([0, 3, 5, 7, 10]),
+    # Full scales
     'ionian': Scale([0, 2, 4, 5, 7, 9, 11]),  # major scale
     'dorian': Scale([0, 2, 3, 5, 7, 9, 10]),
-    'lidian': Scale([0, 1, 3, 5, 7, 8, 10]),
-    'frigian': Scale([0, 2, 4, 6, 7, 9, 11]),
+    'phrygian': Scale([0, 1, 3, 5, 7, 8, 10]),
+    'lydian': Scale([0, 2, 4, 6, 7, 9, 11]),
     'mixolidian': Scale([0, 2, 4, 5, 7, 9, 10]),
-    'aonian': Scale([0, 2, 3, 5, 7, 8, 10]),  # relative minor
-    'unknown': Scale([0, 1, 3, 5, 6, 8, 10]),
+    'aeolian': Scale([0, 2, 3, 5, 7, 8, 10]),  # relative minor
+    'locrian': Scale([0, 1, 3, 5, 6, 8, 10]),
+
+    # 5 note scales
+    'pentatonic_major': Scale([0, 2, 4, 7, 9]),
+    'pentatonic_minor': Scale([0, 3, 5, 7, 10]),
+    'pentatonic_blues': Scale([0, 3, 5, 6, 7, 10]),
+    'pentatonic_neutral': Scale([0, 2, 5, 7, 10]),
+
+    'diatonic': Scale([0, 2, 4, 7, 9]),  # same as pentatonic major
+
+    'balinese': Scale([0, 1, 3, 7, 8]),
+    'chinese': Scale([0, 4, 6, 7, 11]),
+    'egyptian': Scale([0, 2, 5, 7, 10]),
+    'hirajoshi': Scale([0, 2, 3, 7, 8]),
+    'japanise_a': Scale([0, 1, 5, 7, 8]),
+    'japanise_b': Scale([0, 2, 5, 7, 8]),
+    'kumoi': Scale([0, 2, 3, 7, 9]),
+    'pelong': Scale([0, 1, 3, 7, 8]),
 }
 
 

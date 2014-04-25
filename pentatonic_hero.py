@@ -228,7 +228,7 @@ def get_args():
     parser_input.add_argument('--input_profile', action='store', type=select_input_profile, help='input1 profile name (defined in controlers.py)', default='key_input')
     parser_input.add_argument('--input_profile2', action='store', type=select_input_profile, help='input2 profile name (defined in controlers.py)', default='null_input')
     parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='C3')
-    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale, help='scale to use (defined in music.py)', default='pentatonic')
+    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale, help='scale to use (defined in music.py)', default='pentatonic_major')
     parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too (player2 is automatically +1)', default=0)
     parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=-0.1)
