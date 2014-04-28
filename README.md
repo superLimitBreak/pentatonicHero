@@ -63,7 +63,7 @@ Clone the repository with git
 
 * Install [homebrew](http://brew.sh/) package manager
 	* You may need to `brew install git` and other basic dev tools
-* `make install_osx` This will install python3 and pygame. [Reference](http://florian-berger.de/en/articles/installing-pygame-for-python-3-on-os-x)
+* `make install` This will install python3 and pygame. [Reference](http://florian-berger.de/en/articles/installing-pygame-for-python-3-on-os-x)
 
 * Setup Virtual Midi port
     * Open `Audio MIDI Setup`
@@ -73,7 +73,7 @@ Clone the repository with git
 
 #### Linux (Ubuntu 13.10)
 
-* `make install_linux`
+* `make install`
 *  ???
 
 ### Controller Setup
