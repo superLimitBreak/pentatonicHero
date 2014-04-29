@@ -38,7 +38,7 @@ class HeroInput(object):
         self.enable_hammer_ons_and_pulloffs = hammer_ons
         self.hammer_strum_block_delay = datetime.timedelta(microseconds=hammer_strum_block_delay * 1000)
 
-        self.button_states = [False for i in range(5)]  # TODO: remove hard coded majic number for buttons
+        self.button_states = [False] * 5  # TODO: remove hard coded majic number for buttons
         self.scale_index_offset = 0
         self.playing_power = 0
         self.previous_note = 0
