@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3
 import pygame
+import datetime
 
 from operator import attrgetter
 
@@ -18,13 +19,16 @@ TITLE = 'Pentatonic Hero'
 
 DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
 DEFAULT_HAMMER_DECAY = -0.1
+DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 100
+
+now = lambda: datetime.datetime.now()
 
 # Input Logic & State  ---------------------------------------------------------
 
 
 class HeroInput(object):
 
-    def __init__(self, input_event_identifyers, root_note, scale, midi_output, hammer_ons=True, hammer_decay=DEFAULT_HAMMER_DECAY):
+    def __init__(self, input_event_identifyers, root_note, scale, midi_output, hammer_ons=True, hammer_decay=DEFAULT_HAMMER_DECAY, hammer_strum_block_delay=DEFAULT_HAMMER_STRUM_BLOCK_DELAY):
         self.input_event_identifyers = input_event_identifyers
         self.root_note = root_note
         self.scale = scale
@@ -32,11 +36,13 @@ class HeroInput(object):
 
         self.hammer_decay = hammer_decay
         self.enable_hammer_ons_and_pulloffs = hammer_ons
+        self.hammer_strum_block_delay = datetime.timedelta(microseconds=hammer_strum_block_delay * 1000)
 
         self.button_states = [False for i in range(5)]  # TODO: remove hard coded majic number for buttons
         self.scale_index_offset = 0
         self.playing_power = 0
         self.previous_note = 0
+        self.previous_note_timestamp = now()
         self.pitch_bend = 0
         self.previous_pitch_bend = 0
 
@@ -110,8 +116,16 @@ class HeroInput(object):
             self._send_note()
         if self.playing_power > 0:
             current_note = self.root_note + self.scale.scale_note(self.button_greatest + self.scale_index_offset)
+            # Do not play a strum if the note has not chaged since a recent hammer on
+            if \
+                self.hammer_strum_block_delay and \
+                self.playing_power >= 1 and \
+                self.previous_note == current_note and \
+                now() - self.previous_note_timestamp < self.hammer_strum_block_delay:
+                    log.debug('hammer_strum_block_delay')
+                    self.playing_power += self.hammer_decay
             # Play if note changed or strum
-            if current_note != self.previous_note or self.playing_power >= 1:
+            elif current_note != self.previous_note or self.playing_power >= 1:
                 self._send_note(current_note)
                 self.playing_power += self.hammer_decay
         if self.pitch_bend != self.previous_pitch_bend:
@@ -125,6 +139,7 @@ class HeroInput(object):
             if self.playing_power == 1 or \
                self.playing_power < 1 and self.enable_hammer_ons_and_pulloffs:
                 self.midi_output.note(note, self.playing_power)
+                self.previous_note_timestamp = now()
 
     def _send_pitch_bend(self, pitch):
         """
@@ -232,6 +247,7 @@ def get_args():
     parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too (player2 is automatically +1)', default=0)
     parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=-0.1)
+    parser_input.add_argument('--hammer_strum_block_delay', action='store', type=int, help='After hammeron and strum of the same note, Drop the strum from duplicating the note.', default=DEFAULT_HAMMER_STRUM_BLOCK_DELAY)
 
     parser.add_argument('--midi_port_name', action='store', help='Output port name to attach too', default=DEFAULT_MIDI_PORT_NAME)
 
