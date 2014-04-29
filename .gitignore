@@ -54,3 +54,7 @@ docs/_build/
 
 # PyCharm
 .idea/
+
+
+# Pentatonic Hero Build
+pygame
