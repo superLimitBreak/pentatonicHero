@@ -77,4 +77,15 @@ joy1_input = _hero_control_factory(
     axis_strum=3,
 )
 
-joy2_input = ()
+joy2_input = _hero_control_factory(
+    event_type='button',
+    event_down=pygame.JOYBUTTONDOWN,
+    event_up=pygame.JOYBUTTONUP,
+    button_strum=7,
+    button_transpose_increment=20,
+    button_transpose_decrement=21,
+    button_notes=(17, 13, 12, 14, 15),
+    axis_pitch_bend=2,
+    axis_strum=7,
+)
+
