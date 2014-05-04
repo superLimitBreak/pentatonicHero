@@ -37,6 +37,7 @@ Setup
 			* [windows](http://sourceforge.net/projects/qsynth/)
 		* [Komplete Player](http://www.native-instruments.com/en/products/komplete/samplers/kontakt-5-player/) (windows and osx)
 			* I use _Native Instruments_ 'Rock Guitar' bundled with their basic 'Kontact 5 Player' as this has simulated fret noise.
+
 * Recommended _Guitar Hero_ Controller connected to your PC
     * With Playstation 2 USB adaptor and Playstation 2 wired guitars
     * Directly with USB (Xbox 360 wired Guitar hero controller)
@@ -75,6 +76,30 @@ Clone the repository with git
 
 * `make install`
 *  ???
+
+### Midi Synth Setup
+
+####Linux
+
+I found LMMS to give the best results in Linux so far, 
+so here are instuctions on setting it up:
+
+##### Setup soundfont
+	1. Download a decent distorted electric guitar sound font (an .*sf2* file)
+    2. Open LMMS
+    3. Click *Edit* > *Settings* > *Folder icon*
+    4. Choose the *.sf2* file for "DEFAULT SOUNDFONT FILE"
+    5. Exit settings
+
+##### Set a soundfont instument
+	1. You should see a *Song-Editor* window in LMMS, if not the grey icon under the "New Project" icon
+	2. Remove all instruments from the *Song-Editor* window, right-click > remove
+	3. From the *Instrument plugins* panel on the left, drag a drop the *Sf2 Player* into the *Song-Editor* window
+	4. Click on the instrument and in the text area at the top enter "PentatonicHero"
+	5. Click on the *midi* tab
+	6. Click *ENABLE MIDI INPUT*
+
+Now you should be set, make sure to keep LMMS open for the duration of using PentatonicHero.
 
 ### Controller Setup
 
