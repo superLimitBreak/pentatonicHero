@@ -25,7 +25,8 @@ def _hero_control_factory(
         button_transpose_increment,
         button_transpose_decrement,
         button_notes,
-        pitch_bend_axis=None,  # Pitch bending is optional as keyboard inputs dont support this
+        axis_pitch_bend=None,  # Pitch bending is optional as keyboard inputs dont support this
+        axis_strum=None,  # Some controlers have axis change as a strum
     ):
     def _button_note(button_index, event_value):
         return (
@@ -37,8 +38,10 @@ def _hero_control_factory(
         InputEvent(event_down, event_type, button_transpose_increment, 'ctrl_transpose_increment', ()),
         InputEvent(event_down, event_type, button_transpose_decrement, 'ctrl_transpose_decrement', ()),
     ) + tuple(chain(*(_button_note(button_index, event_value) for button_index, event_value in enumerate(button_notes))))
-    if pitch_bend_axis:
-        control_config += (InputEvent(pygame.JOYAXISMOTION, 'axis', pitch_bend_axis, 'ctrl_pitch_bend', ()),)
+    if axis_pitch_bend:
+        control_config += (InputEvent(pygame.JOYAXISMOTION, 'axis', axis_pitch_bend, 'ctrl_pitch_bend', ()),)
+    if axis_strum:
+        control_config += (InputEvent(pygame.JOYAXISMOTION, 'axis', axis_strum, 'ctrl_strum', ()),)
     return control_config
 
 
@@ -66,11 +69,23 @@ joy1_input = _hero_control_factory(
     event_type='button',
     event_down=pygame.JOYBUTTONDOWN,
     event_up=pygame.JOYBUTTONUP,
-    button_strum=6,
-    button_transpose_increment=7,
-    button_transpose_decrement=8,
-    button_notes=(1, 2, 3, 4, 5),
-    pitch_bend_axis=1,
+    button_strum=7,
+    button_transpose_increment=8,
+    button_transpose_decrement=9,
+    button_notes=(5, 1, 0, 2, 3),
+    axis_pitch_bend=1,
+    axis_strum=3,
 )
 
-joy2_input = ()
+joy2_input = _hero_control_factory(
+    event_type='button',
+    event_down=pygame.JOYBUTTONDOWN,
+    event_up=pygame.JOYBUTTONUP,
+    button_strum=7,
+    button_transpose_increment=20,
+    button_transpose_decrement=21,
+    button_notes=(17, 13, 12, 14, 15),
+    axis_pitch_bend=2,
+    axis_strum=7,
+)
+

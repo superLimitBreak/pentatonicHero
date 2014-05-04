@@ -82,8 +82,14 @@ class HeroInput(object):
     def ctrl_note_down(self, index):
         self.button_states[index] = True
 
-    def ctrl_strum(self):
-        self.playing_power = 1
+    def ctrl_strum(self, value=None):
+        """
+        Some stum inputs are joystick axis's and will pass a value.
+        0 is nutral, +1 down, -1 up
+        However, the floating point 0 sometimes can be 0.03328745623847. we need a threshold
+        """
+        if value == None or value > 0.1 or value < -0.1:
+            self.playing_power = 1
 
     def ctrl_pitch_bend(self, value):
         self.pitch_bend = value
