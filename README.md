@@ -40,6 +40,7 @@ Setup
 
 * Recommended _Guitar Hero_ Controller connected to your PC
     * With Playstation 2 USB adaptor and Playstation 2 wired guitars
+        * Pitch bend may not be supported. (If possible, put the controler into analog mode)
     * Directly with USB (Xbox 360 wired Guitar hero controller)
     * Other guitar controllers? wireless?
 
