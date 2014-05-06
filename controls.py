@@ -65,25 +65,25 @@ key_input = _hero_control_factory(
     ),
 )
 
-joy1_input = _hero_control_factory(
+usb_ps2_joy1 = _hero_control_factory(
     event_type='button',
     event_down=pygame.JOYBUTTONDOWN,
     event_up=pygame.JOYBUTTONUP,
     button_strum=7,
-    button_transpose_increment=8,
-    button_transpose_decrement=9,
+    button_transpose_increment=9,
+    button_transpose_decrement=8,
     button_notes=(5, 1, 0, 2, 3),
     axis_pitch_bend=1,
     axis_strum=3,
 )
 
-joy2_input = _hero_control_factory(
+usb_ps2_joy2 = _hero_control_factory(
     event_type='button',
     event_down=pygame.JOYBUTTONDOWN,
     event_up=pygame.JOYBUTTONUP,
     button_strum=7,
-    button_transpose_increment=20,
-    button_transpose_decrement=21,
+    button_transpose_increment=21,
+    button_transpose_decrement=20,
     button_notes=(17, 13, 12, 14, 15),
     axis_pitch_bend=2,
     axis_strum=7,
