@@ -18,7 +18,7 @@ VERSION = '0.1'
 TITLE = 'Pentatonic Hero'
 
 DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
-DEFAULT_HAMMER_DECAY = -0.1
+DEFAULT_HAMMER_DECAY = -0.01
 DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 100
 
 now = lambda: datetime.datetime.now()
@@ -28,8 +28,9 @@ now = lambda: datetime.datetime.now()
 
 class HeroInput(object):
 
-    def __init__(self, input_event_identifyers, root_note, scale, midi_output, hammer_ons=True, hammer_decay=DEFAULT_HAMMER_DECAY, hammer_strum_block_delay=DEFAULT_HAMMER_STRUM_BLOCK_DELAY):
-        self.input_event_identifyers = input_event_identifyers
+    def __init__(self, input_event_processor, root_note, scale, midi_output, hammer_ons=True, hammer_decay=DEFAULT_HAMMER_DECAY, hammer_strum_block_delay=DEFAULT_HAMMER_STRUM_BLOCK_DELAY):
+        self.input_event_processor = input_event_processor
+        
         self.root_note = root_note
         self.scale = scale
         self.midi_output = midi_output
@@ -45,6 +46,21 @@ class HeroInput(object):
         self.previous_note_timestamp = now()
         self.pitch_bend = 0
         self.previous_pitch_bend = 0
+        
+        # A dictionary of bound methods to manipulate this HeroInput
+        # The controler code can call these to update to the state
+        self.control_methods = {
+            method_name : getattr(self, 'ctrl_{0}'.format(method_name))
+            for method_name in (
+                'transpose_increment',
+                'transpose_decrement',
+                'note_up',
+                'note_down',
+                'strum',
+                'pitch_bend',
+            )
+        }
+
 
     @property
     def button_greatest(self):
@@ -92,7 +108,7 @@ class HeroInput(object):
             self.playing_power = 1
 
     def ctrl_pitch_bend(self, value):
-        self.pitch_bend = value
+        self.pitch_bend = -value
 
     # Events -------------------------------------
 
@@ -106,14 +122,7 @@ class HeroInput(object):
         If all the note buttons are pressed and the TRANSPOSE buttons are used:
           the starting note (the music key) is changed
         """
-        for input_event_identifyer in self.input_event_identifyers:
-            if input_event_identifyer.type == event.type:
-                if attrgetter(input_event_identifyer.attr)(event) == input_event_identifyer.value:
-                    args = input_event_identifyer.event_func_args
-                    # Hack - special case for axis
-                    if input_event_identifyer.attr == 'axis':
-                        args = (event.value,)
-                    getattr(self, input_event_identifyer.event_func_name)(*args)
+        self.input_event_processor(event, self.control_methods)
 
     def process_state(self):
         # Stop playing note if none pressed
@@ -199,7 +208,11 @@ class App:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.quit()
-            log.debug(event)
+            try:
+                if event.axis != 3:
+                    log.debug(event)
+            except:
+                log.debug(event)
             for player in self.players.values():
                 player.update_state(event)
         for player in self.players.values():
@@ -246,13 +259,13 @@ def get_args():
     def select_scale(scale_string):
         return SCALES[scale_string]
 
-    parser_input.add_argument('--input_profile', action='store', type=select_input_profile, help='input1 profile name (defined in controlers.py)', default='key_input')
-    parser_input.add_argument('--input_profile2', action='store', type=select_input_profile, help='input2 profile name (defined in controlers.py)', default='null_input')
-    parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='C3')
-    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale, help='scale to use (defined in music.py)', default='pentatonic_major')
+    parser_input.add_argument('--input_profile', choices=controls.__all__, type=select_input_profile, help='input1 profile name (defined in controlers.py)', default='keyboard')
+    parser_input.add_argument('--input_profile2', choices=controls.__all__, type=select_input_profile, help='input2 profile name (defined in controlers.py)', default='null_input')
+    parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='A3')
+    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale, help='scale to use (defined in music.py)', default='pentatonic_minor')
     parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too (player2 is automatically +1)', default=0)
     parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
-    parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=-0.1)
+    parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=DEFAULT_HAMMER_DECAY)
     parser_input.add_argument('--hammer_strum_block_delay', action='store', type=int, help='After hammeron and strum of the same note, Drop the strum from duplicating the note.', default=DEFAULT_HAMMER_STRUM_BLOCK_DELAY)
 
     parser.add_argument('--midi_port_name', action='store', help='Output port name to attach too', default=DEFAULT_MIDI_PORT_NAME)

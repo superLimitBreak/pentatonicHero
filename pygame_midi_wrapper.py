@@ -44,8 +44,14 @@ class PygameMidiWrapper(object):
         """
         if not note:
             return
+        velocity = int(velocity * 127)
         log.info('note: ch{0} - {1} {2} - {3}'.format(self.channel, note, note_to_text(note), velocity))
-        self.midi.write_short(0x90 + self.channel, note, int(velocity * 127))
+        self.midi.write_short(0x90 + self.channel, note, velocity)
+        #if velocity:
+        #    self.midi.note_on(note, velocity)
+        #else:
+        #    self.midi.note_off(note)
+        #self.midi.write_short(0x90 + self.channel, note, 127)
 
     def pitch(self, pitch=0):
         """
