@@ -262,7 +262,7 @@ def get_args():
     parser_input.add_argument('--input_profile', choices=controls.__all__, help='input1 profile name (defined in controlers.py)', default='keyboard')
     parser_input.add_argument('--input_profile2', choices=controls.__all__, help='input2 profile name (defined in controlers.py)', default='null_input')
     parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='A3')
-    parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale, help='scale to use (defined in music.py)', default='pentatonic_minor')
+    parser_input.add_argument('--scale', choices=SCALES.keys(), help='scale to use (defined in music.py)', default='pentatonic_minor')
     parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too (player2 is automatically +1)', default=0)
     parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=DEFAULT_HAMMER_DECAY)
@@ -277,6 +277,7 @@ def get_args():
     
     args.input_profile = select_input_profile(args.input_profile)
     args.input_profile2 = select_input_profile(args.input_profile2)
+    args.scale = select_scale(args.scale)
 
     return args
 
