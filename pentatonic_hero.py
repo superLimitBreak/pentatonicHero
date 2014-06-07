@@ -259,8 +259,8 @@ def get_args():
     def select_scale(scale_string):
         return SCALES[scale_string]
 
-    parser_input.add_argument('--input_profile', choices=controls.__all__, type=select_input_profile, help='input1 profile name (defined in controlers.py)', default='keyboard')
-    parser_input.add_argument('--input_profile2', choices=controls.__all__, type=select_input_profile, help='input2 profile name (defined in controlers.py)', default='null_input')
+    parser_input.add_argument('--input_profile', choices=controls.__all__, help='input1 profile name (defined in controlers.py)', default='keyboard')
+    parser_input.add_argument('--input_profile2', choices=controls.__all__, help='input2 profile name (defined in controlers.py)', default='null_input')
     parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='A3')
     parser_input.add_argument('--scale', choices=SCALES.keys(), type=select_scale, help='scale to use (defined in music.py)', default='pentatonic_minor')
     parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too (player2 is automatically +1)', default=0)
@@ -273,7 +273,12 @@ def get_args():
     parser.add_argument('--log_level', type=int,  help='log level', default=logging.INFO)
     parser.add_argument('--version', action='version', version=VERSION)
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    
+    args.input_profile = select_input_profile(args.input_profile)
+    args.input_profile2 = select_input_profile(args.input_profile2)
+
+    return args
 
 
 if __name__ == "__main__":
