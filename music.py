@@ -53,7 +53,7 @@ def parse_note(item):
     61
     """
     try:
-        note_str, octave = re.match(r'([ABCDEFG]#?)(\d)', item.upper()).groups()
+        note_str, octave = re.match(r'([ABCDEFG]#?)(-?\d{1,2})', item.upper()).groups()
         return LOOKUP_STR_NOTE[note_str] + (int(octave) * NUM_NOTES_IN_OCTAVE) + OFFSET_FROM_C0
     except Exception:
         raise Exception('Unable to parse note {0}'.format(item))
@@ -117,14 +117,16 @@ def midi_pitch(pitch_bend_value, channel=0):
     http://forum.arduino.cc/index.php?topic=119790.0
     http://www.tonalsoft.com/pub/pitch-bend/pitch.2005-08-24.17-00.aspx
 
-    >>> midi_pitch(0)
-    (0xE0, 0x00, 0x40)
-    >>> midi_pitch(0, channel=1)
-    (0xE1, 0x00, 0x40)
-    >>> midi_pitch(1)
-    (0xE0, 0x7F, 0x7F)
-    >>> midi_pitch(-1)
-    (0xE0, 0x01, 0x00)
+    ##>>> midi_pitch(-0.1241455078125)  # 1016 (0xE0, 0x70, 0x37)
+
+    >>> midi_pitch(0)  # (0xE0, 0x00, 0x40)
+    (224, 0, 64)
+    >>> midi_pitch(0, channel=1)  # (0xE1, 0x00, 0x40)
+    (225, 0, 64)
+    >>> midi_pitch(1)  # (0xE0, 0x7F, 0x7F)
+    (224, 127, 127)
+    >>> midi_pitch(-1)  # (0xE0, 0x01, 0x00)
+    (224, 1, 0)
     """
     change = 0x2000 + int(pitch_bend_value * 0x1FFF);
     return (0xE0 + channel, change & 0x7F, (change >> 7) & 0x7F)
