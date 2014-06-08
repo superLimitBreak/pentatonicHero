@@ -10,6 +10,9 @@ run:
 
 install: $(OS)
 
+test:
+	python3 -m doctest -v *.py
+
 # OSX installation
 Darwin:
 	brew install python3 sdl sdl_image sdl_mixer sdl_ttf portmidi mercurial
