@@ -51,7 +51,17 @@ def parse_note(item):
     60
     >>> parse_note('C#3')
     61
+    >>> parse_note('60')
+    60
+    >>> parse_note(60)
+    60
     """
+    try:
+        item = int(item)
+        if item >= 0:  # todo, upper limit?
+            return item
+    except:
+        pass
     try:
         note_str, octave = re.match(r'([ABCDEFG]#?)(-?\d{1,2})', item.upper()).groups()
         return LOOKUP_STR_NOTE[note_str] + (int(octave) * NUM_NOTES_IN_OCTAVE) + OFFSET_FROM_C0

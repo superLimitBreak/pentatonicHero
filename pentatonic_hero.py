@@ -1,8 +1,8 @@
 #!/usr/local/bin/python3
 import pygame
 import datetime
-
-from operator import attrgetter
+import operator
+from collections import namedtuple
 
 from music import note_to_text, parse_note, SCALES
 from pygame_midi_wrapper import PygameMidiWrapper
@@ -19,18 +19,26 @@ TITLE = 'Pentatonic Hero'
 
 DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
 DEFAULT_HAMMER_DECAY = -0.01
-DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 100
+DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 50
+DEFAULT_NOTE_LIMIT = (parse_note('C0'), parse_note('C8'))
 
 now = lambda: datetime.datetime.now()
+
+NoteLimit = namedtuple('NoteLimit', ['lower', 'upper'])
 
 # Input Logic & State  ---------------------------------------------------------
 
 
 class HeroInput(object):
 
-    def __init__(self, input_event_processor, root_note, scale, midi_output, hammer_ons=True, hammer_decay=DEFAULT_HAMMER_DECAY, hammer_strum_block_delay=DEFAULT_HAMMER_STRUM_BLOCK_DELAY):
+    def __init__(self, input_event_processor, root_note, scale, midi_output,
+        hammer_ons=True,
+        hammer_decay=DEFAULT_HAMMER_DECAY,
+        hammer_strum_block_delay=DEFAULT_HAMMER_STRUM_BLOCK_DELAY,
+        note_limit=NoteLimit(*DEFAULT_NOTE_LIMIT)
+    ):
         self.input_event_processor = input_event_processor
-        
+
         self.root_note = root_note
         self.scale = scale
         self.midi_output = midi_output
@@ -38,19 +46,22 @@ class HeroInput(object):
         self.hammer_decay = hammer_decay
         self.enable_hammer_ons_and_pulloffs = hammer_ons
         self.hammer_strum_block_delay = datetime.timedelta(microseconds=hammer_strum_block_delay * 1000)
+        self.note_limit = note_limit
 
-        self.button_states = [False] * 5  # TODO: remove hard coded majic number for buttons
-        self.scale_index_offset = 0
+        self.button_states = [False] * 5  # TODO: remove hard coded magic number for buttons
         self.playing_power = 0
         self.previous_note = 0
         self.previous_note_timestamp = now()
         self.pitch_bend = 0
         self.previous_pitch_bend = 0
-        
+
+        self.scale_index_offset = 0
+        self._calculate_scale_limit()
+
         # A dictionary of bound methods to manipulate this HeroInput
         # The controler code can call these to update to the state
         self.control_methods = {
-            method_name : getattr(self, 'ctrl_{0}'.format(method_name))
+            method_name: getattr(self, 'ctrl_{0}'.format(method_name))
             for method_name in (
                 'transpose_increment',
                 'transpose_decrement',
@@ -61,6 +72,24 @@ class HeroInput(object):
             )
         }
 
+    def _calculate_scale_limit(self):
+        def _nearest_scale_index_offset(target_midi_note, index_offset, seek_direction):
+            """
+            seek_direction -1 or +1
+            """
+            if seek_direction != 1 and seek_direction != -1:
+                raise AttributeError('seek_drieciton muse be 1 or -1')
+            scale_index_offset = 0
+            compare = operator.gt if seek_direction == 1 else operator.lt
+            while compare(target_midi_note, self.get_midi_note(scale_index_offset + index_offset)):
+                scale_index_offset += seek_direction
+            # When we pop out of the desitred range, revert the last seek_direction
+            # to ensure last note (scale_index) is definantly within out range
+            return scale_index_offset  # - seek_direction
+        self.scale_index_offset_limit = NoteLimit(
+            lower=_nearest_scale_index_offset(self.note_limit.lower, 0                        , -1),
+            upper=_nearest_scale_index_offset(self.note_limit.upper, len(self.button_states)-1,  1),
+        )
 
     @property
     def button_greatest(self):
@@ -70,13 +99,26 @@ class HeroInput(object):
     def button_all(self):
         return not any([not b for b in self.button_states])
 
+    @property
+    def current_midi_note(self):
+        return self.get_midi_note(self.button_greatest)
+
+    def get_midi_note(self, scale_index):
+        return self.root_note + self.scale.scale_note(scale_index + self.scale_index_offset)
+
     def transpose_scale(self, offset):
-        self.scale_index_offset += offset
-        log.info('scale transpose: {0}'.format(offset))
+        proposed_scale_index_offset = self.scale_index_offset + offset
+        if (proposed_scale_index_offset >= self.scale_index_offset_limit.lower) and \
+           (proposed_scale_index_offset <= self.scale_index_offset_limit.upper):
+            self.scale_index_offset = proposed_scale_index_offset
+            log.info('scale transpose: {0}'.format(offset))
+        else:
+            log.info('scale transpose: restricted with limit')
 
     def transpose_root(self, offset):
         self.root_note += offset
         log.info('root note: {0}'.format(note_to_text(self.root_note)))
+        self._calculate_scale_limit()
 
     # Input Logic ----------------------------
 
@@ -130,7 +172,7 @@ class HeroInput(object):
             self.playing_power = 0
             self._send_note()
         if self.playing_power > 0:
-            current_note = self.root_note + self.scale.scale_note(self.button_greatest + self.scale_index_offset)
+            current_note = self.current_midi_note
             # Do not play a strum if the note has not chaged since a recent hammer on
             if \
                 self.hammer_strum_block_delay and \
@@ -267,6 +309,7 @@ def get_args():
     parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=DEFAULT_HAMMER_DECAY)
     parser_input.add_argument('--hammer_strum_block_delay', action='store', type=int, help='After hammeron and strum of the same note, Drop the strum from duplicating the note.', default=DEFAULT_HAMMER_STRUM_BLOCK_DELAY)
+    parser_input.add_argument('--note_limit', action='store', type=parse_note, nargs=2, help='Set an upper and lower limit e.g "C2 A6"', default=DEFAULT_NOTE_LIMIT)
 
     parser.add_argument('--midi_port_name', action='store', help='Output port name to attach too', default=DEFAULT_MIDI_PORT_NAME)
 
@@ -274,10 +317,11 @@ def get_args():
     parser.add_argument('--version', action='version', version=VERSION)
 
     args = parser.parse_args()
-    
+
     args.input_profile = select_input_profile(args.input_profile)
     args.input_profile2 = select_input_profile(args.input_profile2)
     args.scale = select_scale(args.scale)
+    args.note_limit = NoteLimit(*args.note_limit)
 
     return args
 
