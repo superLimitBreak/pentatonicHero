@@ -13,11 +13,13 @@ log = logging.getLogger(__name__)
 
 # Contants ---------------------------------------------------------------------
 
-VERSION = '0.1'
+VERSION = '0.2'
 
 TITLE = 'Pentatonic Hero'
 
 DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
+DEFAULT_ROOT_NOTE = 'A3'
+DEFAULT_SCALE = 'pentatonic_minor'
 DEFAULT_HAMMER_DECAY = -0.01
 DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 50
 DEFAULT_NOTE_LIMIT = (parse_note('C1'), parse_note('C#5'))
@@ -31,15 +33,20 @@ NoteLimit = namedtuple('NoteLimit', ['lower', 'upper'])
 
 class HeroInput(object):
 
-    def __init__(self, input_event_processor, root_note, scale, midi_output,
+    def __init__(self, input_event_processor, midi_output,
+        root_note=parse_note(DEFAULT_ROOT_NOTE),
+        scale=SCALES[DEFAULT_SCALE],
         hammer_ons=True,
         hammer_decay=DEFAULT_HAMMER_DECAY,
         hammer_strum_block_delay=DEFAULT_HAMMER_STRUM_BLOCK_DELAY,
-        note_limit=NoteLimit(*DEFAULT_NOTE_LIMIT)
+        note_limit=NoteLimit(*DEFAULT_NOTE_LIMIT),
+        **kwargs
     ):
         self.input_event_processor = input_event_processor
 
         self.root_note = root_note
+        assert root_note >= note_limit.lower and root_note <= note_limit.upper, 'root_note is not within note range limit'
+
         self.scale = scale
         self.midi_output = midi_output
 
@@ -236,19 +243,13 @@ class App:
         self.players = {
             'player1': HeroInput(
                 options.input_profile,
-                options.root_note,
-                options.scale,
                 PygameMidiWrapper(self.midi_out, channel=options.channel),
-                options.hammer_ons,
-                options.hammer_decay,
+                **vars(options)
             ),
             'player2': HeroInput(
                 options.input_profile2,
-                options.root_note,
-                options.scale,
                 PygameMidiWrapper(self.midi_out, channel=options.channel+1),
-                options.hammer_ons,
-                options.hammer_decay,
+                **vars(options)
             ),
         }
 
@@ -264,7 +265,7 @@ class App:
                 if event.key == pygame.K_F2:
                     self.players['player2'].toggle_mute()
             try:
-                if event.axis != 3:
+                if event.axis != 3:  # The PS3 controler has a touch sensetive pad that constantly spams the logs with axis results
                     log.debug(event)
             except:
                 log.debug(event)
@@ -316,8 +317,8 @@ def get_args():
 
     parser_input.add_argument('--input_profile', choices=controls.__all__, help='input1 profile name (defined in controlers.py)', default='keyboard')
     parser_input.add_argument('--input_profile2', choices=controls.__all__, help='input2 profile name (defined in controlers.py)', default='null_input')
-    parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default='A3')
-    parser_input.add_argument('--scale', choices=SCALES.keys(), help='scale to use (defined in music.py)', default='pentatonic_minor')
+    parser_input.add_argument('--root_note', action='store', type=parse_note, help='root note (key)', default=DEFAULT_ROOT_NOTE)
+    parser_input.add_argument('--scale', choices=SCALES.keys(), help='scale to use (defined in music.py)', default=DEFAULT_SCALE)
     parser_input.add_argument('--channel', action='store', type=int, help='Midi channel to output too (player2 is automatically +1)', default=0)
     parser_input.add_argument('--hammer_ons', action='store', type=bool, help='Enable hammer-ons', default=True)
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=DEFAULT_HAMMER_DECAY)
