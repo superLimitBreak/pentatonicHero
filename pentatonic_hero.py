@@ -20,7 +20,7 @@ TITLE = 'Pentatonic Hero'
 DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
 DEFAULT_HAMMER_DECAY = -0.01
 DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 50
-DEFAULT_NOTE_LIMIT = (parse_note('C0'), parse_note('C8'))
+DEFAULT_NOTE_LIMIT = (parse_note('C1'), parse_note('C5'))
 
 now = lambda: datetime.datetime.now()
 
