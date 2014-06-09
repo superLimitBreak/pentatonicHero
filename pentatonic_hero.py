@@ -20,7 +20,7 @@ TITLE = 'Pentatonic Hero'
 DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
 DEFAULT_HAMMER_DECAY = -0.01
 DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 50
-DEFAULT_NOTE_LIMIT = (parse_note('C1'), parse_note('C5'))
+DEFAULT_NOTE_LIMIT = (parse_note('C1'), parse_note('C#5'))
 
 now = lambda: datetime.datetime.now()
 
@@ -82,12 +82,12 @@ class HeroInput(object):
             if seek_direction != 1 and seek_direction != -1:
                 raise AttributeError('seek_drieciton muse be 1 or -1')
             scale_index_offset = 0
-            compare = operator.gt if seek_direction == 1 else operator.lt
+            compare = operator.ge if seek_direction == 1 else operator.le
             while compare(target_midi_note, self.get_midi_note(scale_index_offset + index_offset)):
                 scale_index_offset += seek_direction
             # When we pop out of the desitred range, revert the last seek_direction
             # to ensure last note (scale_index) is definantly within out range
-            return scale_index_offset  # - seek_direction
+            return scale_index_offset - seek_direction
         self.scale_index_offset_limit = NoteLimit(
             lower=_nearest_scale_index_offset(self.note_limit.lower, 0                        , -1),
             upper=_nearest_scale_index_offset(self.note_limit.upper, len(self.button_states)-1,  1),
