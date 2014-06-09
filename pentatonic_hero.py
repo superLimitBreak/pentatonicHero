@@ -55,6 +55,8 @@ class HeroInput(object):
         self.pitch_bend = 0
         self.previous_pitch_bend = 0
 
+        self.mute = False
+
         self.scale_index_offset = 0
         self._calculate_scale_limit()
 
@@ -154,6 +156,12 @@ class HeroInput(object):
 
     # Events -------------------------------------
 
+    def toggle_mute(self):
+        self.mute = not self.mute
+        log.info('mute: {0}'.format(self.mute))
+        if self.mute:
+            self._send_note()
+
     def update_state(self, event):
         """
         Update the object state based on input events
@@ -192,7 +200,7 @@ class HeroInput(object):
     def _send_note(self, note=None):
         self.midi_output.note(self.previous_note, velocity=0)
         self.previous_note = note
-        if note:
+        if note and not self.mute:
             if self.playing_power == 1 or \
                self.playing_power < 1 and self.enable_hammer_ons_and_pulloffs:
                 self.midi_output.note(note, self.playing_power)
@@ -250,6 +258,11 @@ class App:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F1:
+                    self.players['player1'].toggle_mute()
+                if event.key == pygame.K_F2:
+                    self.players['player2'].toggle_mute()
             try:
                 if event.axis != 3:
                     log.debug(event)
