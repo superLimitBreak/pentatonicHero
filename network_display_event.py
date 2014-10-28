@@ -1,16 +1,16 @@
 import socket
 import json
 import traceback
+import datetime
 
 import logging
 log = logging.getLogger(__name__)
-
 
 # Constants --------------------------------------------------------------------
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 9872
-
+DEFAULT_RECONNECT_TIMEOUT = datetime.timedelta(seconds=5)
 
 # Null Handler -----------------------------------------------------------------
 
@@ -28,14 +28,36 @@ class DisplayEventHandler(object):
         try:
             return DisplayEventHandler(*args, **kwargs)
         except Exception:
-            log.warn('unable to setup network display {0} {1}'.format(args, kwargs))
+            log.warn('Unable to setup TCP network socket {0} {1}'.format(args, kwargs))
             traceback.print_exc()
             return DisplayEventHandlerNull()
 
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
-        log.debug('Setup network socket {0}:{1}'.format(host, port))
+        self.host = host
+        self.port = int(port)
+        self.socket_connected_attempted_timestamp = None
+        self._connect()
+
+    def _connect(self):
+        log.debug('Attempting connect TCP network socket {0}:{1}'.format(self.host, self.port))
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, int(port)))
+        self.socket.connect((self.host, self.port))
+
+    def _reconnect(self):
+        # Don't try to connect if the last connection attempt was very recent
+        if self.socket_connected_attempted_timestamp is not None and self.socket_connected_attempted_timestamp > datetime.datetime.now() - DEFAULT_RECONNECT_TIMEOUT:
+            return
+        # Ensure existing socket is closed
+        try:
+            self.socket.close()
+        except Exception:
+            pass
+        # Attempt new connection
+        try:
+            self._connect()
+        except Exception: # ConnectionRefusedError:
+            log.debug('Failed to reconnect')
+            self.socket_connected_attempted_timestamp = datetime.datetime.now()
 
     def event(self, input_identifyer, event, **params):
         log.debug('Input: {0}, Event: {1},  Value: {2}'.format(input_identifyer, event, params))
@@ -45,4 +67,10 @@ class DisplayEventHandler(object):
             'event': event,
         }
         data.update(params)
-        self.socket.sendall((json.dumps(data)+'\n').encode('utf-8'))
+        data = (json.dumps(data)+'\n').encode('utf-8')
+        try:
+            self.socket.sendall(data)
+        except Exception:  #BrokenPipeError
+            # The data send has failed - for such a transient event we have to just loose the data
+            # but we should try to reconnect for the next potential send
+            self._reconnect()
