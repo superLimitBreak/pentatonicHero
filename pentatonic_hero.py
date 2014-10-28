@@ -19,6 +19,8 @@ VERSION = '0.3'
 
 TITLE = 'Pentatonic Hero'
 
+DEFAULT_DISPLAY_HOST = 'localhost:9872'
+
 DEFAULT_MIDI_PORT_NAME = 'PentatonicHero'
 DEFAULT_ROOT_NOTE = 'A3'
 DEFAULT_SCALE = 'pentatonic_minor'
@@ -129,7 +131,7 @@ class HeroInput(object):
            (proposed_scale_index_offset <= self.scale_index_offset_limit.upper):
             self.scale_index_offset = proposed_scale_index_offset
             log.info('scale transpose: {0}'.format(offset))
-            self.display_event('transpose', [note_to_text(self.get_midi_note(i)) for i, v in enumerate(self.button_states)])
+            self.display_event('transpose', notes=[note_to_text(self.get_midi_note(i)) for i, v in enumerate(self.button_states)])
         else:
             log.info('scale transpose: restricted with limit')
 
@@ -154,11 +156,11 @@ class HeroInput(object):
 
     def ctrl_note_up(self, index):
         self.button_states[index] = False
-        self.display_event('note_up', index)
+        self.display_event('button_up', button=index)
 
     def ctrl_note_down(self, index):
         self.button_states[index] = True
-        self.display_event('note_down', index)
+        self.display_event('button_down', button=index)
 
     def ctrl_strum(self, value=None):
         """
@@ -166,9 +168,10 @@ class HeroInput(object):
         0 is nutral, +1 down, -1 up
         However, the floating point 0 sometimes can be 0.03328745623847. we need a threshold
         """
-        if value == None or value > 0.1 or value < -0.1:
+        if value is None or value > 0.1 or value < -0.1:
+            value = value or 0
             self.playing_power = 1
-            self.display_event('strum', value)
+            self.display_event('strum', value=1 if value >= 0 else -1)
 
     def ctrl_pitch_bend(self, value):
         self.pitch_bend = -value
@@ -179,7 +182,7 @@ class HeroInput(object):
         self.mute = not self.mute
         log.info('mute: {0}'.format(self.mute))
         if self.mute:
-            self._send_note()
+            self._send_note_off()
 
     def update_state(self, event):
         """
@@ -197,7 +200,7 @@ class HeroInput(object):
         # Stop playing note if none pressed
         if self.button_greatest == -1:
             self.playing_power = 0
-            self._send_note()
+            self._send_note_off()
         if self.playing_power > 0:
             current_note = self.current_midi_note
             # Do not play a strum if the note has not chaged since a recent hammer on
@@ -215,17 +218,25 @@ class HeroInput(object):
         if self.pitch_bend != self.previous_pitch_bend:
             self.previous_pitch_bend = self.pitch_bend
             self._send_pitch_bend(self.pitch_bend)
-            self.display_event('pitch', self.pitch_bend)
+            self.display_event('pitch', pitch=self.pitch_bend)
 
-    def _send_note(self, note=None):
-        self.midi_output.note(self.previous_note, velocity=0)
+    def _send_note(self, note):
+        if not note:
+            return
+        self._send_note_off()
         self.previous_note = note
         if note and not self.mute:
             if self.playing_power == 1 or \
                self.playing_power < 1 and self.enable_hammer_ons_and_pulloffs:
                 self.midi_output.note(note, self.playing_power)
-                self.display_event('note_play', self.button_greatest)
+                self.display_event('note_on', value=self.button_greatest)
                 self.previous_note_timestamp = now()
+
+    def _send_note_off(self):
+        if self.previous_note:
+            self.midi_output.note(self.previous_note, velocity=0)
+            self.display_event('note_off', value=self.previous_note)
+            self.previous_note = None
 
     def _send_pitch_bend(self, pitch):
         """
@@ -342,7 +353,7 @@ def get_args():
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=DEFAULT_HAMMER_DECAY)
     parser_input.add_argument('--hammer_strum_block_delay', action='store', type=int, help='After hammeron and strum of the same note, Drop the strum from duplicating the note.', default=DEFAULT_HAMMER_STRUM_BLOCK_DELAY)
     parser_input.add_argument('--note_limit', action='store', type=parse_note, nargs=2, help='Set an upper and lower limit e.g "C2 A6"', default=DEFAULT_NOTE_LIMIT)
-    parser_input.add_argument('--display_host', action='store', help='ip adress and port for remote TCP display events', default='')
+    parser_input.add_argument('--display_host', action='store', help='ip adress and port for remote TCP display events', default=DEFAULT_DISPLAY_HOST)
 
     parser.add_argument('--midi_port_name', action='store', help='Output port name to attach too', default=DEFAULT_MIDI_PORT_NAME)
 
