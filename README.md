@@ -22,6 +22,7 @@ Features
 * Pitch bending
 * Scale transposing (using start select buttons). Keeps in key but allows the performer to reach a greater range of notes.
 * Root note (key) selection (hold down all the note buttons and use start/select to shift root note)
+* Display information can be sent via a TCP socket. This could allow for a separate peice of software to perform visulisations
 
 Setup
 -----
@@ -130,3 +131,7 @@ Now you should be set, make sure to keep LMMS open for the duration of using Pen
 ### More Options
 
 `python3 pentatonic_hero.py --help`
+
+### Network Display
+
+Controler and note data cant be sent over a TCP socket. This is designed so that separate software can provide visulisations. See [display-trigger](https://github.com/calaldees/display-trigger)
