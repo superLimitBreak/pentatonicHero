@@ -3,9 +3,11 @@ import pygame
 import datetime
 import operator
 from collections import namedtuple
+from functools import partial
 
 from music import note_to_text, parse_note, SCALES
 from pygame_midi_wrapper import PygameMidiWrapper
+from network_display_event import DisplayEventHandler, DisplayEventHandlerNull
 import controls
 
 import logging
@@ -13,7 +15,7 @@ log = logging.getLogger(__name__)
 
 # Contants ---------------------------------------------------------------------
 
-VERSION = '0.2'
+VERSION = '0.3'
 
 TITLE = 'Pentatonic Hero'
 
@@ -33,7 +35,10 @@ NoteLimit = namedtuple('NoteLimit', ['lower', 'upper'])
 
 class HeroInput(object):
 
+    input_identifyer = 0
+
     def __init__(self, input_event_processor, midi_output,
+        display=DisplayEventHandlerNull(),
         root_note=parse_note(DEFAULT_ROOT_NOTE),
         scale=SCALES[DEFAULT_SCALE],
         hammer_ons=True,
@@ -42,6 +47,8 @@ class HeroInput(object):
         note_limit=NoteLimit(*DEFAULT_NOTE_LIMIT),
         **kwargs
     ):
+        HeroInput.input_identifyer += 1
+
         self.input_event_processor = input_event_processor
 
         self.root_note = root_note
@@ -49,6 +56,7 @@ class HeroInput(object):
 
         self.scale = scale
         self.midi_output = midi_output
+        self.display_event = partial(display.event, HeroInput.input_identifyer)
 
         self.hammer_decay = hammer_decay
         self.enable_hammer_ons_and_pulloffs = hammer_ons
@@ -121,6 +129,7 @@ class HeroInput(object):
            (proposed_scale_index_offset <= self.scale_index_offset_limit.upper):
             self.scale_index_offset = proposed_scale_index_offset
             log.info('scale transpose: {0}'.format(offset))
+            self.display_event('transpose', [note_to_text(self.get_midi_note(i)) for i, v in enumerate(self.button_states)])
         else:
             log.info('scale transpose: restricted with limit')
 
@@ -145,9 +154,11 @@ class HeroInput(object):
 
     def ctrl_note_up(self, index):
         self.button_states[index] = False
+        self.display_event('note_up', index)
 
     def ctrl_note_down(self, index):
         self.button_states[index] = True
+        self.display_event('note_down', index)
 
     def ctrl_strum(self, value=None):
         """
@@ -157,6 +168,7 @@ class HeroInput(object):
         """
         if value == None or value > 0.1 or value < -0.1:
             self.playing_power = 1
+            self.display_event('strum', value)
 
     def ctrl_pitch_bend(self, value):
         self.pitch_bend = -value
@@ -203,6 +215,7 @@ class HeroInput(object):
         if self.pitch_bend != self.previous_pitch_bend:
             self.previous_pitch_bend = self.pitch_bend
             self._send_pitch_bend(self.pitch_bend)
+            self.display_event('pitch', self.pitch_bend)
 
     def _send_note(self, note=None):
         self.midi_output.note(self.previous_note, velocity=0)
@@ -211,6 +224,7 @@ class HeroInput(object):
             if self.playing_power == 1 or \
                self.playing_power < 1 and self.enable_hammer_ons_and_pulloffs:
                 self.midi_output.note(note, self.playing_power)
+                self.display_event('note_play', self.button_greatest)
                 self.previous_note_timestamp = now()
 
     def _send_pitch_bend(self, pitch):
@@ -240,15 +254,18 @@ class App:
         pygame.midi.init()
         self.midi_out = PygameMidiWrapper.open_device(options.midi_port_name)
 
+        # Network display reporting
+        options.display = DisplayEventHandler.factory(*options.display_host.split(':'))
+
         self.players = {
             'player1': HeroInput(
                 options.input_profile,
-                PygameMidiWrapper(self.midi_out, channel=options.channel),
+                PygameMidiWrapper.factory(self.midi_out, channel=options.channel),
                 **vars(options)
             ),
             'player2': HeroInput(
                 options.input_profile2,
-                PygameMidiWrapper(self.midi_out, channel=options.channel+1),
+                PygameMidiWrapper.factory(self.midi_out, channel=options.channel+1),
                 **vars(options)
             ),
         }
@@ -278,7 +295,8 @@ class App:
         while self.running:
             self.clock.tick(100)
             self._loop()
-        self.midi_out.close()
+        if self.midi_out:
+            self.midi_out.close()
         pygame.midi.quit()
         pygame.quit()
 
@@ -324,6 +342,7 @@ def get_args():
     parser_input.add_argument('--hammer_decay', action='store', type=float, help='Decay with each hammer on', default=DEFAULT_HAMMER_DECAY)
     parser_input.add_argument('--hammer_strum_block_delay', action='store', type=int, help='After hammeron and strum of the same note, Drop the strum from duplicating the note.', default=DEFAULT_HAMMER_STRUM_BLOCK_DELAY)
     parser_input.add_argument('--note_limit', action='store', type=parse_note, nargs=2, help='Set an upper and lower limit e.g "C2 A6"', default=DEFAULT_NOTE_LIMIT)
+    parser_input.add_argument('--display_host', action='store', help='ip adress and port for remote TCP display events', default='')
 
     parser.add_argument('--midi_port_name', action='store', help='Output port name to attach too', default=DEFAULT_MIDI_PORT_NAME)
 
