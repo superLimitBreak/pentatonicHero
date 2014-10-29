@@ -1,6 +1,5 @@
 import socket
 import json
-import traceback
 import datetime
 
 import logging
@@ -11,6 +10,7 @@ log = logging.getLogger(__name__)
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 9872
 DEFAULT_RECONNECT_TIMEOUT = datetime.timedelta(seconds=5)
+
 
 # Null Handler -----------------------------------------------------------------
 
@@ -27,9 +27,8 @@ class DisplayEventHandler(object):
     def factory(*args, **kwargs):
         try:
             return DisplayEventHandler(*args, **kwargs)
-        except Exception:
+        except socket.error:
             log.warn('Unable to setup TCP network socket {0} {1}'.format(args, kwargs))
-            traceback.print_exc()
             return DisplayEventHandlerNull()
 
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
@@ -55,7 +54,7 @@ class DisplayEventHandler(object):
         # Attempt new connection
         try:
             self._connect()
-        except Exception: # ConnectionRefusedError:
+        except socket.error: # ConnectionRefusedError:
             log.debug('Failed to reconnect')
             self.socket_connected_attempted_timestamp = datetime.datetime.now()
 
@@ -70,7 +69,7 @@ class DisplayEventHandler(object):
         data = (json.dumps(data)+'\n').encode('utf-8')
         try:
             self.socket.sendall(data)
-        except Exception:  #BrokenPipeError
+        except socket.error:  #BrokenPipeError
             # The data send has failed - for such a transient event we have to just loose the data
             # but we should try to reconnect for the next potential send
             self._reconnect()
