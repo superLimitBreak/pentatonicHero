@@ -15,7 +15,11 @@ DEFAULT_RECONNECT_TIMEOUT = datetime.timedelta(seconds=5)
 # Null Handler -----------------------------------------------------------------
 
 class DisplayEventHandlerNull(object):
+
     def event(self, *args, **kwargs):
+        pass
+
+    def close(self):
         pass
 
 
@@ -47,16 +51,19 @@ class DisplayEventHandler(object):
         if self.socket_connected_attempted_timestamp is not None and self.socket_connected_attempted_timestamp > datetime.datetime.now() - DEFAULT_RECONNECT_TIMEOUT:
             return
         # Ensure existing socket is closed
+        self.close()
+        # Attempt new connection
+        try:
+            self._connect()
+        except socket.error:  # ConnectionRefusedError:
+            log.debug('Failed to reconnect')
+            self.socket_connected_attempted_timestamp = datetime.datetime.now()
+
+    def close(self):
         try:
             self.socket.close()
         except Exception:
             pass
-        # Attempt new connection
-        try:
-            self._connect()
-        except socket.error: # ConnectionRefusedError:
-            log.debug('Failed to reconnect')
-            self.socket_connected_attempted_timestamp = datetime.datetime.now()
 
     def event(self, input_identifyer, event, **params):
         log.debug('Input: {0}, Event: {1},  Value: {2}'.format(input_identifyer, event, params))
@@ -69,7 +76,7 @@ class DisplayEventHandler(object):
         data = (json.dumps(data)+'\n').encode('utf-8')
         try:
             self.socket.sendall(data)
-        except socket.error:  #BrokenPipeError
+        except socket.error:  # BrokenPipeError
             # The data send has failed - for such a transient event we have to just loose the data
             # but we should try to reconnect for the next potential send
             self._reconnect()

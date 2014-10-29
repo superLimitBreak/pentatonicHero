@@ -266,17 +266,19 @@ class App:
         self.midi_out = PygameMidiWrapper.open_device(options.midi_port_name)
 
         # Network display reporting
-        options.display = DisplayEventHandler.factory(*options.display_host.split(':'))
+        self.display = DisplayEventHandler.factory(*options.display_host.split(':'))
 
         self.players = {
             'player1': HeroInput(
                 options.input_profile,
                 PygameMidiWrapper.factory(self.midi_out, channel=options.channel),
+                display=self.display,
                 **vars(options)
             ),
             'player2': HeroInput(
                 options.input_profile2,
                 PygameMidiWrapper.factory(self.midi_out, channel=options.channel+1),
+                display=self.display,
                 **vars(options)
             ),
         }
@@ -308,6 +310,8 @@ class App:
             self._loop()
         if self.midi_out:
             self.midi_out.close()
+        if self.display:
+            self.display.close()
         pygame.midi.quit()
         pygame.quit()
 
