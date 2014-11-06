@@ -229,7 +229,7 @@ class HeroInput(object):
             if self.playing_power == 1 or \
                self.playing_power < 1 and self.enable_hammer_ons_and_pulloffs:
                 self.midi_output.note(note, self.playing_power)
-                self.display_event('note_on', value=self.button_greatest)
+                self.display_event('note_on', value=self.button_greatest, button=self.button_greatest)
                 self.previous_note_timestamp = now()
 
     def _send_note_off(self):
