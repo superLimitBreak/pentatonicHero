@@ -1,94 +1,132 @@
 var penatonic_hero = {};
 (function(external, options){
+	// Variables ---------------------------------------------------------------
 	options = _.extend({
 		inputs: 2,
-        buttons: 5,
-        track_length: 200,
+		buttons: 5,
+		track_length: 200,
 	}, options) 
 
-    var count = 0;
-    
-    // Init --------------------------------------------------------------------
-    
-    // Init button state arrays for all inputs
-    var inputs = Array(options.inputs.length);
-    for (var input_number=0 ; input_number < inputs.length ; input_number++) {
-        inputs[input_number] = {} ; //Array(options.buttons);
-        var button_states = inputs[input_number];
-        for (var button_number=0 ; button_number < button_states.length ; button_number++) {
-            button_states["button_"+button_number] = Array();
-        }
-        button_states['previous_active_button'] = null;
-    }
-    
-    // Private -----------------------------------------------------------------
-    
-    function log_track_event(input, button_number, button_state) {
-        /*
-        The last button event is called active_note_track
-        We store this because:
-          - note_off dose not give us the button number
-          - we only EVER play one note at once, so we always know the previous button is the one to disable
-        */
-        var _button_number = button_number;
-        button_number = button_number || inputs[input]['previous_active_button'];
-        inputs[input]['previous_active_button'] = _button_number;
-        
-        var track = inputs[input]["button_"+button_number];
-        track.unshift({tick:count, state: button_state});
-        if (_.last(track).tick < count + options.track_length) {
-            track.pop();
-        }
-        return track;
-    }
-    
-    function display_track(track) {
-        var blocks = []
-        return blocks;
-    }
-    
-    // Public ------------------------------------------------------------------
-    
-    external.tick = function() {
-        var previous_count = count;
-        count++;
-        if (count < previous_count) {
-            // reset all tracks
-        }
-    };
-    
-    external.event = function(data) {
-        var event_handlers = {
-            button_down: function(){
-                $("#input"+data.input+"button"+data.button).addClass('button_on');  //document.getElementById('')
-            },
-            button_up: function() {
-                $("#input"+data.input+"button"+data.button).removeClass('button_on');
-            },
-            note_on: function() {
-                log_track_event(data.input, ""+data.button, 1);
-            },
-            note_off: function() {
-                log_track_event(data.input, null, 0);
-            },
-        };
-        if (_.has(event_handlers, data.event)) {
-            event_handlers[data.event]();
-        }
-    };
-    
-    external.display = function() {
-        /*
-        Take the track timing info and return a set of block sizes to render on the display
-        */
-        var display = Array(options.inputs.length);
-        for (var input_number=0 ; input_number < inputs.length ; input_number++) {
-            display[input_number] = Array(button_states.length);
-            for (var button_number=0 ; button_number < button_states.length ; button_number++) {
-                display[input_number][button_number] = display_track(inputs[input]["button_"+button_number]);
-            }
-        }
-        return display;
-    };
+	var count = 0;
+
+	// Private Class's ---------------------------------------------------------
+
+	var ButtonState = function() {
+		this.init();
+		var track = Array();
+		this.getTrack = function() {return this.track;}
+	};
+	ButtonState.prototype = {
+		init: function() {
+			//this.previousActiveButton = null;
+			//this.meth()
+		},
+		addStateEvent: function(button_state) {
+			this.getTrack().unshift({tick:count, state: button_state});
+			if (_.last(this.getTrack()).tick < count + options.track_length) {
+				this.getTrack().pop();
+			}
+		},
+		getDisplayData: function() {
+			
+		}
+	}
+	
+	var ButtonStates = function(){
+		this.init();
+		
+		var previousActiveButton = null;
+		this.setPreviousActiveButton = function(button_number) {previousActiveButton = button_number;}
+		this.getPreviousActiveButton = function() {return previousActiveButton;}
+		
+		var tracks;
+		this.clearTracks = function() {
+			tracks = Array(options.buttons);
+			for (var button_number=0 ; button_number < button_states.length ; button_number++) {
+				tracks[button_number] = new ButtonState();
+			}
+		}
+		this.getTrack = function(index) {return tracks[index];}
+	}
+	ButtonStates.prototype = {
+		init: function() {
+			this.clearTracks();
+		},
+		addStateEvent: function(button_number, button_state) {
+			// Normalise input
+			if (typeof(button_number) == "number") {button_number = ""+button_number;}  // Convert button integer to string so "0" is not boolean null
+			
+			// Remember previous active button
+			var _button_number = button_number;
+			button_number = button_number || this.getPreviousActiveButton();
+			this.setPreviousActiveButton(_button_number);
+			
+			// Log event
+			this.getTracks(button_number).addStateEvent(button_state);
+		},
+		getDisplayData: function() {
+			
+		},
+		clearTracks: function() {
+			this.clearTracks();
+		}
+	}
+
+	// Init --------------------------------------------------------------------
+	
+	// Init button state arrays for all inputs
+	var inputs = Array(options.inputs.length);
+	for (var input_number=0 ; input_number < inputs.length ; input_number++) {
+		  inputs[input_number] = new ButtonStates();
+	}
+	 
+	// Private -----------------------------------------------------------------
+	
+	function display_track(track) {
+		var blocks = []
+		return blocks;
+	}
+	
+	var event_handlers = {
+		button_down: function(data) {
+			this.arg // 1515
+			$("#input"+data.input+"button"+data.button).addClass('button_on');  //document.getElementById('')
+		},
+		button_up: function(data) {
+			$("#input"+data.input+"button"+data.button).removeClass('button_on');
+		},
+		note_on: function(data) {
+			inputs[data.input].addStateEvent(data.button, 1);
+		},
+		note_off: function(data) {
+			inputs[data.input].addStateEvent(null, 0);
+		},
+	}
+
+	// Public ------------------------------------------------------------------
+	
+	external.tick = function() {
+		var previous_count = count;
+		count++;
+		if (count < previous_count) {
+			// reset all tracks
+		}
+	};
+	
+	external.event = function(data) {
+		//this.arg = 1515
+		if (_.has(event_handlers, data.event)) {
+			event_handlers[data.event](data);
+			//event_handlers[data.event].bind(this, 125)();  // bind, apply, call
+		}
+	};
+	
+	external.display = function() {
+		var display = Array(options.inputs.length);
+		for (var input_number=0 ; input_number < inputs.length ; input_number++) {
+			display[input_number] = inputs[input_number].getDisplayData();
+		}
+		return display;
+	};
 
 }(penatonic_hero, options));
