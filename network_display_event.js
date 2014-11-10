@@ -1,12 +1,19 @@
 var penatonic_hero = {};
 (function(external, options){
-	// Variables ---------------------------------------------------------------
+	// Options ---------------------------------------------------------------
 	options = _.extend({
 		inputs: 2,
 		buttons: 5,
 		track_length: 200,
 	}, options) 
-
+	
+	// Constants ---------------------------------------------------------------
+	
+	var BUTTON_NUMBERS = _.range(0, options.buttons);
+	var INPUT_NUMBERS = _.range(0, options.inputs);
+	
+	// Variables ---------------------------------------------------------------
+	
 	var count = 0;
 
 	// Private Class's ---------------------------------------------------------
@@ -14,7 +21,7 @@ var penatonic_hero = {};
 	var ButtonState = function() {
 		this.init();
 		var track = Array();
-		this.getTrack = function() {return this.track;}
+		this.getTrack = function() {return track;}
 	};
 	ButtonState.prototype = {
 		init: function() {
@@ -28,12 +35,12 @@ var penatonic_hero = {};
 			}
 		},
 		getDisplayData: function() {
-			
+			return this.getTrack();
 		}
 	}
 	
 	var ButtonStates = function(){
-		this.init();
+		//this.init();
 		
 		var previousActiveButton = null;
 		this.setPreviousActiveButton = function(button_number) {previousActiveButton = button_number;}
@@ -42,10 +49,11 @@ var penatonic_hero = {};
 		var tracks;
 		this.clearTracks = function() {
 			tracks = Array(options.buttons);
-			for (var button_number=0 ; button_number < button_states.length ; button_number++) {
+			for (var button_number=0 ; button_number < options.buttons ; button_number++) {
 				tracks[button_number] = new ButtonState();
 			}
 		}
+		this.clearTracks();
 		this.getTrack = function(index) {return tracks[index];}
 	}
 	ButtonStates.prototype = {
@@ -61,24 +69,21 @@ var penatonic_hero = {};
 			button_number = button_number || this.getPreviousActiveButton();
 			this.setPreviousActiveButton(_button_number);
 			
-			// Log event
-			this.getTracks(button_number).addStateEvent(button_state);
+			// Record event in a track timestamp log
+			this.getTrack(button_number).addStateEvent(button_state);
 		},
 		getDisplayData: function() {
-			
+			return _.map(BUTTON_NUMBERS, function(button_number){return this.getTrack(button_number).getDisplayData()});
 		},
-		clearTracks: function() {
-			this.clearTracks();
-		}
+		//clearTracks: function() {
+			//this.clearTracks();
+		//}
 	}
 
 	// Init --------------------------------------------------------------------
 	
 	// Init button state arrays for all inputs
-	var inputs = Array(options.inputs.length);
-	for (var input_number=0 ; input_number < inputs.length ; input_number++) {
-		  inputs[input_number] = new ButtonStates();
-	}
+	var inputs = _.map(INPUT_NUMBERS, function(input_number){return new ButtonStates();});
 	 
 	// Private -----------------------------------------------------------------
 	
@@ -89,8 +94,8 @@ var penatonic_hero = {};
 	
 	var event_handlers = {
 		button_down: function(data) {
-			this.arg // 1515
-			$("#input"+data.input+"button"+data.button).addClass('button_on');  //document.getElementById('')
+			this.arg; // 1515
+			$("#input"+data.input+"button"+data.button).addClass('button_on');  //document.getElementById('')  // lookup vanilla js way of doing this
 		},
 		button_up: function(data) {
 			$("#input"+data.input+"button"+data.button).removeClass('button_on');
@@ -115,6 +120,7 @@ var penatonic_hero = {};
 	
 	external.event = function(data) {
 		//this.arg = 1515
+		data.input = data.input - 1;
 		if (_.has(event_handlers, data.event)) {
 			event_handlers[data.event](data);
 			//event_handlers[data.event].bind(this, 125)();  // bind, apply, call
@@ -122,11 +128,7 @@ var penatonic_hero = {};
 	};
 	
 	external.display = function() {
-		var display = Array(options.inputs.length);
-		for (var input_number=0 ; input_number < inputs.length ; input_number++) {
-			display[input_number] = inputs[input_number].getDisplayData();
-		}
-		return display;
+		return _.map(INPUT_NUMBERS, function(input_number){inputs[input_number].getDisplayData();});
 	};
 
-}(penatonic_hero, options));
+}(penatonic_hero, {}));
