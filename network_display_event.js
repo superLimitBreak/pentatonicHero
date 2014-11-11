@@ -5,6 +5,7 @@ var penatonic_hero = {};
 		inputs: 2,
 		buttons: 5,
 		track_length: 200,
+		track_offscreen_length: 400,
 	}, options) 
 	
 	// Constants ---------------------------------------------------------------
@@ -22,6 +23,7 @@ var penatonic_hero = {};
 		this.init();
 		var track = Array();
 		this.getTrack = function() {return track;}
+		this.setTrack = function(_track) {track = _track;}
 	};
 	ButtonState.prototype = {
 		init: function() {
@@ -30,11 +32,40 @@ var penatonic_hero = {};
 		},
 		addStateEvent: function(button_state) {
 			this.getTrack().unshift({tick:count, state: button_state});
-			if (_.last(this.getTrack()).tick < count + options.track_length) {
-				this.getTrack().pop();
-			}
+			this.setTrack(_.filter(this.getTrack(), function(item){item.tick > count - (options.track_length + options.track_offscreen_length)}));
 		},
-		getDisplayData: function() {
+		getDisplayData: function(test_track, test_count) {
+			var track = test_track || this.getTrack();
+			var count = test_count || count;
+			/*
+			>>> limit = 200;
+			
+			Block incomplete
+			>>> count = 1000;
+			>>> track = [{tick:975, state:1}];
+			[{start:0,stop:25}]
+			
+			Block complete
+			>>> count = 100
+			>>> track = [{tick:90, state: 0},{tick:50, state:1}];
+			[{start:10,stop:50}]
+			
+			High count
+			>>> count = 1000;
+			>>> track = [{tick:0, state:1}, {tick:100, state:0}, {tick:900, state:1}]
+			[{start:0, stop:100}]
+			
+			Outside range - should never be displayed
+			>>> count = 1000;
+			>>> track = [{tick:100, state:1}, {tick:200, state:0}]
+			[]
+			
+			Multiple blocks + incomplete block
+			>>> count = 1000;
+			>>> track = [{tick:900, state:1}, {tick:850, state:0}, {tick:750, state:1}]
+			[{start:0, stop:100}, {start:150, stop:200}]
+			
+			 */
 			return this.getTrack();
 		}
 	}
