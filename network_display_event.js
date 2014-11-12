@@ -1,165 +1,275 @@
 var penatonic_hero = {};
-(function(external, options){
-	// Options ---------------------------------------------------------------
-	options = _.extend({
-		inputs: 2,
-		buttons: 5,
-		track_length: 200,
-		track_offscreen_length: 400,
-	}, options) 
-	
-	// Constants ---------------------------------------------------------------
-	
-	var BUTTON_NUMBERS = _.range(0, options.buttons);
-	var INPUT_NUMBERS = _.range(0, options.inputs);
-	
-	// Variables ---------------------------------------------------------------
-	
-	var count = 0;
 
-	// Private Class's ---------------------------------------------------------
+(function(external, options) {
 
-	var ButtonState = function() {
-		this.init();
-		var track = Array();
-		this.getTrack = function() {return track;}
-		this.setTrack = function(_track) {track = _track;}
-	};
-	ButtonState.prototype = {
-		init: function() {
-			//this.previousActiveButton = null;
-			//this.meth()
-		},
-		addStateEvent: function(button_state) {
-			this.getTrack().unshift({tick:count, state: button_state});
-			this.setTrack(_.filter(this.getTrack(), function(item){item.tick > count - (options.track_length + options.track_offscreen_length)}));
-		},
-		getDisplayData: function(test_track, test_count) {
-			var track = test_track || this.getTrack();
-			var count = test_count || count;
-			/*
-			>>> limit = 200;
-			
-			Block incomplete
-			>>> count = 1000;
-			>>> track = [{tick:975, state:1}];
-			[{start:0,stop:25}]
-			
-			Block complete
-			>>> count = 100
-			>>> track = [{tick:90, state: 0},{tick:50, state:1}];
-			[{start:10,stop:50}]
-			
-			High count
-			>>> count = 1000;
-			>>> track = [{tick:0, state:1}, {tick:100, state:0}, {tick:900, state:1}]
-			[{start:0, stop:100}]
-			
-			Outside range - should never be displayed
-			>>> count = 1000;
-			>>> track = [{tick:100, state:1}, {tick:200, state:0}]
-			[]
-			
-			Multiple blocks + incomplete block
-			>>> count = 1000;
-			>>> track = [{tick:900, state:1}, {tick:850, state:0}, {tick:750, state:1}]
-			[{start:0, stop:100}, {start:150, stop:200}]
-			
-			 */
-			return this.getTrack();
-		}
-	}
-	
-	var ButtonStates = function(){
-		//this.init();
-		
-		var previousActiveButton = null;
-		this.setPreviousActiveButton = function(button_number) {previousActiveButton = button_number;}
-		this.getPreviousActiveButton = function() {return previousActiveButton;}
-		
-		var tracks;
-		this.clearTracks = function() {
-			tracks = Array(options.buttons);
-			for (var button_number=0 ; button_number < options.buttons ; button_number++) {
-				tracks[button_number] = new ButtonState();
-			}
-		}
-		this.clearTracks();
-		this.getTrack = function(index) {return tracks[index];}
-	}
-	ButtonStates.prototype = {
-		init: function() {
-			this.clearTracks();
-		},
-		addStateEvent: function(button_number, button_state) {
-			// Normalise input
-			if (typeof(button_number) == "number") {button_number = ""+button_number;}  // Convert button integer to string so "0" is not boolean null
-			
-			// Remember previous active button
-			var _button_number = button_number;
-			button_number = button_number || this.getPreviousActiveButton();
-			this.setPreviousActiveButton(_button_number);
-			
-			// Record event in a track timestamp log
-			this.getTrack(button_number).addStateEvent(button_state);
-		},
-		getDisplayData: function() {
-			return _.map(BUTTON_NUMBERS, function(button_number){return this.getTrack(button_number).getDisplayData()});
-		},
-		//clearTracks: function() {
-			//this.clearTracks();
-		//}
-	}
+  // Options -----------------------------------------------------------------
 
-	// Init --------------------------------------------------------------------
-	
-	// Init button state arrays for all inputs
-	var inputs = _.map(INPUT_NUMBERS, function(input_number){return new ButtonStates();});
-	 
-	// Private -----------------------------------------------------------------
-	
-	function display_track(track) {
-		var blocks = []
-		return blocks;
-	}
-	
-	var event_handlers = {
-		button_down: function(data) {
-			this.arg; // 1515
-			$("#input"+data.input+"button"+data.button).addClass('button_on');  //document.getElementById('')  // lookup vanilla js way of doing this
-		},
-		button_up: function(data) {
-			$("#input"+data.input+"button"+data.button).removeClass('button_on');
-		},
-		note_on: function(data) {
-			inputs[data.input].addStateEvent(data.button, 1);
-		},
-		note_off: function(data) {
-			inputs[data.input].addStateEvent(null, 0);
-		},
-	}
+  options = _.extend({
+    inputs: 2,
+    buttons: 5,
+    track_length: 200,
+    track_offscreen_length: 400,
+  }, options);
 
-	// Public ------------------------------------------------------------------
-	
-	external.tick = function() {
-		var previous_count = count;
-		count++;
-		if (count < previous_count) {
-			// reset all tracks
-		}
-	};
-	
-	external.event = function(data) {
-		//this.arg = 1515
-		data.input = data.input - 1;
-		if (_.has(event_handlers, data.event)) {
-			event_handlers[data.event](data);
-			//event_handlers[data.event].bind(this, 125)();  // bind, apply, call
-		}
-	};
-	
-	external.display = function() {
-		return _.map(INPUT_NUMBERS, function(input_number){inputs[input_number].getDisplayData();});
-	};
+  // Constants ---------------------------------------------------------------
+
+  var BUTTON_NUMBERS = _.range(0, options.buttons);
+  var INPUT_NUMBERS = _.range(0, options.inputs);
+
+  // Variables ---------------------------------------------------------------
+
+  var inputs;
+  var count = 0;
+
+  // Private Class's ---------------------------------------------------------
+
+  var Track = function(options) {
+
+    this.options = _.extend({}, {
+      trackLimit: 200,
+      trackLength: 1000
+    }, options);
+
+    this.reset();
+
+  };
+
+  Track.prototype = {
+
+    add: function(tick, isDown) {
+
+      var lastDatum = _.last(this.data);
+
+      if (!lastDatum || lastDatum.tick <= tick) {
+
+        this.data.push({
+          tick: tick,
+          isDown: isDown
+        });
+
+        this.data = this.filter(tick);
+
+      }
+
+      return this;
+
+    },
+
+    filter: function(tick) {
+      return _.filter(this.data, function(datum) {
+        return datum.tick > tick - this.options.trackLength;
+      }, this);
+    },
+
+    render: function(tick) {
+
+      var displayData = [];
+
+      // Would be more efficient to
+      // compute this on a rolling
+      // basis (in the add() method)
+
+      _.each(this.data, function(datum) {
+
+        var displayDatum;
+        var start;
+        var stop;
+
+        if (datum.isDown) {
+
+          start = Math.min(tick - datum.tick, this.options.trackLimit);
+          stop = 0;
+
+          if (start <= 0) {
+            return;
+          }
+
+          displayDatum = {
+            start: start,
+            stop: stop
+          };
+
+          displayData.push(displayDatum);
+
+        } else {
+
+          displayDatum = _.last(displayData);
+
+          if (!displayDatum) {
+            return;
+          }
+
+          stop = Math.max(tick - datum.tick, 0);
+
+          if (stop > this.options.limit || stop === displayDatum.start) {
+            displayData.pop();
+            return;
+          }
+
+          displayDatum.stop = stop;
+
+        }
+
+      }, this);
+
+      return displayData;
+
+    },
+
+    reset: function() {
+      this.data = [];
+    }
+
+  };
+
+  var Button = function(options) {
+
+    this.options = _.extend({}, {
+      trackLimit: 200,
+      trackLength: 1000
+    }, options);
+
+    this.reset();
+
+  };
+
+  Button.prototype = {
+
+    noteOn: function(tick) {
+      if (!this.isDown) {
+        this.track.add(tick, true);
+        this.isDown = true;
+      }
+    },
+
+    noteOff: function(tick) {
+      if (this.isDown) {
+        this.track.add(tick, false);
+        this.isDown = false;
+      }
+    },
+
+    render: function(tick) {
+      return this.track.render(tick);
+    },
+
+    reset: function() {
+
+      this.isDown = false;
+
+      this.track = new Track({
+        trackLimit: this.options.trackLimit,
+        trackLength: this.options.trackLength
+      });
+
+    }
+
+  };
+
+  var ButtonBoard = function(options) {
+
+    if (_.isNumber(options)) {
+      options = {
+        numberOfKeys: options
+      };
+    }
+
+    this.options = _.extend({}, {
+      numberOfKeys: 5,
+      trackLimit: 200,
+      trackLength: 1000
+    }, options);
+
+    this.reset();
+
+  };
+
+  ButtonBoard.prototype = {
+
+    noteOn: function(tick, keyIndex) {
+      this.keys[keyIndex].noteOn(tick);
+    },
+
+    noteOff: function(tick) {
+      this.each(function(key) {
+        key.noteOff(tick);
+      });
+    },
+
+    each: function(callback) {
+      _.each(this.keys, callback, this);
+      return this;
+    },
+
+    reset: function() {
+      this.keys = [];
+      for (var i = 0; i < this.options.numberOfKeys; i++) {
+        this.keys.push(new Button({
+          trackLimit: this.options.trackLimit,
+          trackLength: this.options.trackLength
+        }));
+      }
+    },
+
+    render: function(tick) {
+      var render = [];
+      this.each(function(key) {
+        render.push(key.render(tick));
+      });
+      return render;
+    }
+
+  };
+
+  // Init --------------------------------------------------------------------
+
+  for (var i = 0; i < INPUT_NUMBERS; i++) {
+    inputs.push(new ButtonBoard());
+  }
+
+  // Private -----------------------------------------------------------------
+
+  var event_handlers = {
+    button_down: function(data) {
+      this.arg; // 1515
+      $("#input" + data.input + "button" + data.button).addClass('button_on'); //document.getElementById('')  // lookup vanilla js way of doing this
+    },
+    button_up: function(data) {
+      $("#input" + data.input + "button" + data.button).removeClass('button_on');
+    },
+    note_on: function(data) {
+      inputs[data.input].noteOn(count, data.button);
+    },
+    note_off: function(data) {
+      inputs[data.input].noteOff(count);
+    }
+  };
+
+  // Public ------------------------------------------------------------------
+
+  external.tick = function() {
+    var previous_count = count;
+    count++;
+    if (count < previous_count) {
+      // reset all tracks
+    }
+  };
+
+  external.event = function(data) {
+    //this.arg = 1515
+    data.input = data.input - 1;
+    if (_.has(event_handlers, data.event)) {
+      event_handlers[data.event](data);
+      //event_handlers[data.event].bind(this, 125)();  // bind, apply, call
+    }
+  };
+
+  external.display = function() {
+    var displayData = [];
+    for (var i = 0; i < INPUT_NUMBERS; i++) {
+      displayData.push(inputs[i].render());
+    }
+    return displayData;
+  };
 
 }(penatonic_hero, {}));
