@@ -35,9 +35,10 @@ class DisplayEventHandler(object):
             log.warn('Unable to setup TCP network socket {0} {1}'.format(args, kwargs))
             return DisplayEventHandlerNull()
 
-    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, reconnect_timeout=DEFAULT_RECONNECT_TIMEOUT):
         self.host = host
         self.port = int(port)
+        self.reconnect_timout = reconnect_timeout
         self.socket_connected_attempted_timestamp = None
         self._connect()
 
@@ -48,7 +49,7 @@ class DisplayEventHandler(object):
 
     def _reconnect(self):
         # Don't try to connect if the last connection attempt was very recent
-        if self.socket_connected_attempted_timestamp is not None and self.socket_connected_attempted_timestamp > datetime.datetime.now() - DEFAULT_RECONNECT_TIMEOUT:
+        if self.socket_connected_attempted_timestamp is not None and self.socket_connected_attempted_timestamp > datetime.datetime.now() - self.reconnect_timeout:
             return
         # Ensure existing socket is closed
         self.close()
