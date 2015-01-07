@@ -6,7 +6,7 @@ from collections import namedtuple
 from functools import partial
 
 from music import note_to_text, parse_note, SCALES
-from pygame_midi_wrapper import PygameMidiWrapper
+from pygame_midi_wrapper import PygameMidiOutputWrapper, PygameMidiDeviceHelper
 from network_display_event import DisplayEventHandler, DisplayEventHandlerNull
 import controls
 
@@ -263,7 +263,7 @@ class App:
 
         # Init midi
         pygame.midi.init()
-        self.midi_out = PygameMidiWrapper.open_device(options.midi_port_name)
+        self.midi_out = PygameMidiDeviceHelper.open_device(options.midi_port_name)
 
         # Network display reporting
         self.display = DisplayEventHandler.factory(*options.display_host.split(':'))
@@ -271,13 +271,13 @@ class App:
         self.players = {
             'player1': HeroInput(
                 options.input_profile,
-                PygameMidiWrapper.factory(self.midi_out, channel=options.channel),
+                PygameMidiOutputWrapper.factory(self.midi_out, channel=options.channel),
                 display=self.display,
                 **vars(options)
             ),
             'player2': HeroInput(
                 options.input_profile2,
-                PygameMidiWrapper.factory(self.midi_out, channel=options.channel+1),
+                PygameMidiOutputWrapper.factory(self.midi_out, channel=options.channel+1),
                 display=self.display,
                 **vars(options)
             ),

@@ -8,7 +8,40 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class PygameMidiWrapperNull(object):
+# Midi Device Helper -----------------------------------------------------------
+
+class PygameMidiDeviceHelper(object):
+    MidiDevice = namedtuple('MidiDevice', ('id', 'interf', 'name', 'input', 'output', 'opened'))
+
+    @classmethod
+    def get_device(self_class, id):
+        return self_class.MidiDevice(*((id,)+pygame.midi.get_device_info(id)))
+
+    @classmethod
+    def get_devices(self_class):
+        return (self_class.get_device(id) for id in range(pygame.midi.get_count()))
+
+    @classmethod
+    def open_device(self_class, name=None, io='output'):
+        assert io in ('input', 'output'), 'Invalid io param'
+        midi_device_id = pygame.midi.get_default_output_id()
+        if name:
+            for midi_device in self_class.get_devices():
+                if name.lower() in midi_device.name.decode('utf-8').lower() and bool(getattr(midi_device, io)):
+                    midi_device_id = midi_device.id
+        if midi_device_id == -1:
+            log.warn("unable to identify a midi device with name '{0}'".format(name))
+            return
+        log.info("using midi {0} - {1}".format(io, self_class.get_device(midi_device_id)))
+        if io == 'output':
+            return pygame.midi.Output(midi_device_id)
+        if io == 'input':
+            return pygame.midi.Input(midi_device_id)
+
+
+# Midi Wrapper -----------------------------------------------------------------
+
+class PygameMidiOutputWrapperNull(object):
     def note(self, *args, **kwargs):
         pass
 
@@ -16,40 +49,13 @@ class PygameMidiWrapperNull(object):
         pass
 
 
-# Midi Wrapper -----------------------------------------------------------------
-
-class PygameMidiWrapper(object):
-    MidiDevice = namedtuple('MidiDevice', ('id', 'interf', 'name', 'input', 'output', 'opened'))
-
-    @staticmethod
-    def get_device(id):
-        return PygameMidiWrapper.MidiDevice(*((id,)+pygame.midi.get_device_info(id)))
-
-    @staticmethod
-    def get_devices():
-        return (PygameMidiWrapper.get_device(id) for id in range(pygame.midi.get_count()))
-
-    @staticmethod
-    def open_device(name=None, io='output'):
-        midi_device_id = pygame.midi.get_default_output_id()
-        if name:
-            for midi_device in PygameMidiWrapper.get_devices():
-                if name.lower() in midi_device.name.decode('utf-8').lower() and bool(getattr(midi_device, io)):
-                    midi_device_id = midi_device.id
-        if midi_device_id == -1:
-            log.warn("unable to identify a midi device with name '{0}'".format(name))
-            return
-        log.info("using midi {0} - {1}".format(io, PygameMidiWrapper.get_device(midi_device_id)))
-        if io == 'output':
-            return pygame.midi.Output(midi_device_id)
-        if io == 'input':
-            return pygame.midi.Input(midi_device_id)
+class PygameMidiOutputWrapper(object):
 
     @staticmethod
     def factory(pygame_midi_output, channel=0):
         if pygame_midi_output:
-            return PygameMidiWrapper(pygame_midi_output, channel)
-        return PygameMidiWrapperNull()
+            return PygameMidiOutputWrapper(pygame_midi_output, channel)
+        return PygameMidiOutputWrapperNull()
 
     def __init__(self, pygame_midi_output, channel=0):
         assert pygame_midi_output, 'pygame_midi_output required'
