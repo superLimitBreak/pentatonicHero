@@ -24,13 +24,19 @@ class PygameMidiDeviceHelper(object):
     @classmethod
     def open_device(self_class, name=None, io='output'):
         assert io in ('input', 'output'), 'Invalid io param'
-        midi_device_id = pygame.midi.get_default_output_id()
+        midi_device_id = -1
         if name:
             for midi_device in self_class.get_devices():
                 if name.lower() in midi_device.name.decode('utf-8').lower() and bool(getattr(midi_device, io)):
                     midi_device_id = midi_device.id
-        if midi_device_id == -1:
-            log.warn("unable to identify a midi device with name '{0}'".format(name))
+        if midi_device_id < 0:
+            log.warn("Unable to identify a midi device with name '{0}'".format(name))
+            if io == 'input':
+                midi_device_id = pygame.midi.get_default_input_id()
+            if io == 'outout':
+                midi_device_id = pygame.midi.get_default_output_id()
+        if midi_device_id < 0:
+            log.error('No {0} midi devices avalable'.format(io))
             return
         log.info("using midi {0} - {1}".format(io, self_class.get_device(midi_device_id)))
         if io == 'output':
