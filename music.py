@@ -1,7 +1,7 @@
 """ Music Note Utils """
 
 import re
-
+from collections import namedtuple
 
 # Human readable input/output --------------------------------------------------
 
@@ -140,3 +140,25 @@ def midi_pitch(pitch_bend_value, channel=0):
     """
     change = 0x2000 + int(pitch_bend_value * 0x1FFF);
     return (0xE0 + channel, change & 0x7F, (change >> 7) & 0x7F)
+
+MidiStatus = namedtuple('MidiStatus', ['code', 'name', 'channel'])
+MIDI_STATUS_LOOKUP = {
+    0x8: 'note_off',
+    0x9: 'note_on',
+    0xA: 'polyphonic_aftertouch',
+    0xB: 'control_change',
+    0xC: 'program_change',
+    0xD: 'channel_aftertouch',
+    0xE: 'pitch_wheel',
+}
+def midi_status(status_byte):
+    """
+    >>> midi_status(144)
+    MidiStatus(code=9, name='note_on', channel=0)
+    """
+    status_code = status_byte//16
+    return MidiStatus(
+        code=status_code,
+        name=MIDI_STATUS_LOOKUP[status_code],
+        channel=status_byte % 16,
+    )
