@@ -67,12 +67,9 @@ class DisplayEventHandler(object):
         except Exception:
             pass
 
-    def event(self, input_identifyer, event, **params):
-        log.debug('Input: {0}, Event: {1},  Value: {2}'.format(input_identifyer, event, params))
+    def event(self, func_name, **params):
         data = {
-            'func': 'penatonic_hero.event',
-            'input': input_identifyer,
-            'event': event,
+            'func': func_name,
         }
         data.update(params)
         data = (json.dumps(data)+'\n').encode('utf-8')

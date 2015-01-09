@@ -27,6 +27,7 @@ DEFAULT_SCALE = 'pentatonic_minor'
 DEFAULT_HAMMER_DECAY = -0.01
 DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 50
 DEFAULT_NOTE_LIMIT = (parse_note('C1'), parse_note('C#5'))
+DEFAULT_DISPLAY_EVENT_FUNCTION_NAME = 'penatonic_hero.event'
 
 now = lambda: datetime.datetime.now()
 
@@ -58,7 +59,12 @@ class HeroInput(object):
 
         self.scale = scale
         self.midi_output = midi_output
-        self.display_event = partial(display.event, HeroInput.input_identifyer)
+
+        def display_event(event, **kwargs):
+            kwargs['event'] = event
+            kwargs['input'] = HeroInput.input_identifyer
+            display.event(DEFAULT_DISPLAY_EVENT_FUNCTION_NAME, **kwargs)
+        self.display_event = display_event
 
         self.hammer_decay = hammer_decay
         self.enable_hammer_ons_and_pulloffs = hammer_ons
