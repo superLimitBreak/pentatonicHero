@@ -58,3 +58,8 @@ docs/_build/
 
 # Pentatonic Hero Build
 pygame
+
+# Dependencys
+network_display_event.py
+pygame_midi_wrapper.py
+music.py

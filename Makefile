@@ -5,13 +5,10 @@ help:
 	# install : Install Pentatic Hero
 	# run     : Run Pentatonic Hero
 
-run:
-	python3 pentatonic_hero.py
 
-install: $(OS)
+# Installation -----------------------------------------------------------------
 
-test:
-	python3 -m doctest -v *.py
+install: $(OS) network_display_event.py pygame_midi_wrapper.py music.py
 
 # OSX installation
 Darwin:
@@ -26,3 +23,20 @@ Linux:
 	sudo pip3 install hg+http://bitbucket.org/pygame/pygame
 	#hg clone https://bitbucket.org/pygame/pygame
 	#cd pygame ; python3 setup.py build ; sudo python3 setup.py install
+
+network_display_event.py:
+	curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/net/network_display_event.py --compressed -O
+pygame_midi_wrapper.py:
+	curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_wrapper.py --compressed -O
+music.py:
+	curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/music.py --compressed -O
+
+
+# Run --------------------------------------------------------------------------
+
+run:
+	python3 pentatonic_hero.py
+
+test:
+	python3 -m doctest -v *.py
+
