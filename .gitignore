@@ -62,4 +62,5 @@ pygame
 # Dependencys
 network_display_event.py
 pygame_midi_wrapper.py
+pygame_midi_output.py
 music.py
