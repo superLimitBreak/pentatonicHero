@@ -1,0 +1,43 @@
+.pentatonic_hero {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.pentatonic_hero .input {
+    width: 50%;
+}
+.pentatonic_hero .input .track {
+    width: 20%;
+}
+
+.pentatonic_hero .input .track .button_track
+.pentatonic_hero .input .track .button {
+    width: 100%;
+}
+
+.pentatonic_hero .input .track .button_track {
+    height: 95%;
+}
+.pentatonic_hero .input .track .button {
+    height: 5%;
+}
+
+.pentatonic_hero .input .track .button1 {
+    background-color: red;
+}
+.pentatonic_hero .input .track .button2 {
+    background-color: yellow;
+}
+.pentatonic_hero .input .track .button3 {
+    background-color: green;
+}
+.pentatonic_hero .input .track .button4 {
+    background-color: blue;
+}
+.pentatonic_hero .input .track .button5 {
+    background-color: orange;
+}
+
