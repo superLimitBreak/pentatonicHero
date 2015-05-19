@@ -24,7 +24,7 @@ var penatonic_hero = {};
 
 	// Variables ---------------------------------------------------------------
 
-	var inputs;
+	var inputs = [];
 	var tick = 0;
 
 
@@ -258,7 +258,7 @@ var penatonic_hero = {};
 		trackLimit: 200,
 	}, options);
 
-	$root = $('#'+element_id);
+	$root = $('#'+options.element_id);
 	$root.addClass('.pentatonic_hero'); // This is shit. Have an inner div
 
 	// Build HTML ----------------
@@ -273,11 +273,12 @@ var penatonic_hero = {};
 			$track.append($button);
 			$input.append($track);
 		}, this);
-		return $player;
+		//console.log('input', $input);
+		return $input;
 	}
 
 	function buildHTML() {
-		_.each(_.range(0, inputs), function(element, index, list){
+		_.each(_.range(0, options.inputs), function(element, index, list){
 			$root.append(generatePlayerHTML(element));
 		}, this);
 	}
