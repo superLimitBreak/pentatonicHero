@@ -1,19 +1,25 @@
 .pentatonic_hero {
+    /*
     position: absolute;
     top: 0;
     left: 0;
     bottom: 0;
     right: 0;
+    */
 }
 
 .pentatonic_hero .input {
+    height: 100%;
     width: 50%;
+    display: inline-block;
 }
 .pentatonic_hero .input .track {
+    height: 100%;
     width: 20%;
+    display: inline-block;
 }
 
-.pentatonic_hero .input .track .button_track
+.pentatonic_hero .input .track .button_track,
 .pentatonic_hero .input .track .button {
     width: 100%;
 }
@@ -22,6 +28,7 @@
     height: 95%;
 }
 .pentatonic_hero .input .track .button {
+    bottom:0;
     height: 5%;
 }
 

@@ -252,35 +252,37 @@ var penatonic_hero = {};
 
 (function(external, options) {
 	options = _.extendOwn({
-		element_id: 'screen',
+		element_id: '#screen',
 		inputs: 2,
 		buttons: 5,
 		trackLimit: 200,
 	}, options);
 
-	$root = $('#'+options.element_id);
-	$root.addClass('.pentatonic_hero'); // This is shit. Have an inner div
+	var $root;
 
 	// Build HTML ----------------
 
 	function generatePlayerHTML(input_number) {
-		$input = $('<div/>').addClass('input input'+input_number);
+		var $input = $('<div/>').addClass('input input'+input_number);
 		_.each(_.range(0, options.buttons), function(element, index, list){
-			$track = $('<div/>').addClass('track button'+element);
-			$button_track = $('<div/>').addClass('button_track')
-			$button = $('<div/>').addClass('button');
+			var $track = $('<div/>').addClass('track button'+element);
+			var $button_track = $('<div/>').addClass('button_track')
+			var $button = $('<div/>').addClass('button');
 			$track.append($button_track);
 			$track.append($button);
 			$input.append($track);
-		}, this);
-		//console.log('input', $input);
+		});
 		return $input;
 	}
 
 	function buildHTML() {
+		$root = $(options.element_id);
+		$root.addClass('pentatonic_hero'); // This is shit. Have an inner div
+		$root.empty();
+		
 		_.each(_.range(0, options.inputs), function(element, index, list){
 			$root.append(generatePlayerHTML(element));
-		}, this);
+		});
 	}
 
 	// Render logic ------------------
@@ -294,17 +296,22 @@ var penatonic_hero = {};
 		_.each(external.display(), displayInput, this);
 	}
 	
+	function getButton(data) {
+		return $root.find('.input'+data.input + ' .button'+data.button);
+	}
+	
 	_.extend(external.event_handlers, {
 		button_down: function(data) {
-			$root.find('.input'+data.input + ' button'+data.button).addClass('button_on');
+			getButton(data).addClass('button_on');
 		},
 		button_up: function(data) {
-			$root.find('.input'+data.input + ' button'+data.button).removeClass('button_on');
+			getButton(data).removeClass('button_on');
 		},
 	});
 	
 	// External ----------------------------------------------------------------
 	
-	external.buildHTML = buildHTML
+	external.buildHTML = buildHTML;
+	external.generatePlayerHTML = generatePlayerHTML;
 	
 }(penatonic_hero, {}));
