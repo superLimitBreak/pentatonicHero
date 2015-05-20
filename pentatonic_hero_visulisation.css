@@ -9,12 +9,12 @@
 }
 
 .pentatonic_hero .input {
-    height: 100%;
-    width: 50%;
+    width: 50vw;
+    height: 100vh;
     display: inline-block;
 }
 .pentatonic_hero .input .track {
-    height: 100%;
+    height: 100vh;
     width: 20%;
     display: inline-block;
 }
@@ -25,26 +25,27 @@
 }
 
 .pentatonic_hero .input .track .button_track {
-    height: 95%;
+    height: 95vh;
+    display: inline-block;
 }
 .pentatonic_hero .input .track .button {
-    bottom:0;
-    height: 5%;
+    height: 5vh;
+    display: inline-block;
 }
 
-.pentatonic_hero .input .track .button1 {
+.pentatonic_hero .input .track.button0.button_on .button {
     background-color: red;
 }
-.pentatonic_hero .input .track .button2 {
+.pentatonic_hero .input .track.button1.button_on .button {
     background-color: yellow;
 }
-.pentatonic_hero .input .track .button3 {
+.pentatonic_hero .input .track.button2.button_on .button {
     background-color: green;
 }
-.pentatonic_hero .input .track .button4 {
+.pentatonic_hero .input .track.button3.button_on .button {
     background-color: blue;
 }
-.pentatonic_hero .input .track .button5 {
+.pentatonic_hero .input .track.button4.button_on .button {
     background-color: orange;
 }
 
