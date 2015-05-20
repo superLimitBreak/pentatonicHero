@@ -36,16 +36,36 @@
 .pentatonic_hero .input .track.button0.button_on .button {
     background-color: red;
 }
+.pentatonic_hero .input .track.button0.button_on .button_track {
+    background-color: #880000;
+}
+
 .pentatonic_hero .input .track.button1.button_on .button {
     background-color: yellow;
 }
+.pentatonic_hero .input .track.button1.button_on .button_track {
+    background-color: #888800;
+}
+
 .pentatonic_hero .input .track.button2.button_on .button {
     background-color: green;
 }
+.pentatonic_hero .input .track.button2.button_on .button_track {
+    background-color: #008800;
+}
+
 .pentatonic_hero .input .track.button3.button_on .button {
     background-color: blue;
 }
+.pentatonic_hero .input .track.button3.button_on .button_track {
+    background-color: #000088;
+}
+
 .pentatonic_hero .input .track.button4.button_on .button {
     background-color: orange;
 }
+.pentatonic_hero .input .track.button4.button_on .button_track {
+    background-color: #888888;
+}
+
 

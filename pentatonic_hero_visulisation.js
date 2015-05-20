@@ -48,7 +48,7 @@ var penatonic_hero = {};
 				});
 				this.filterExpired(tick);
 			}
-			return this;
+			//return this;
 		},
 
 		filterExpired: function(tick) {
@@ -103,9 +103,11 @@ var penatonic_hero = {};
 				}
 			}, this);
 			// Remove element entirely over out limit
-			return _.filter(displayData, function(element){
-				return element.start >= this.options.trackLimit && element.stop >= this.options.trackLimit;
+			displayData = _.filter(displayData, function(element){
+				return !(element.start >= this.options.trackLimit && element.stop >= this.options.trackLimit);
 			}, this);
+			//console.log(displayData);
+			return displayData;
 		},
 
 		reset: function() {
@@ -227,6 +229,10 @@ var penatonic_hero = {};
 		}
 	};
 
+	external.getTick = function() {
+		return tick;
+	};
+
 	external.event = function(data) {
 		//this.arg = 1515
 		data.input = data.input - 1;
@@ -238,7 +244,7 @@ var penatonic_hero = {};
 
 	external.display = function() {
 		return _.map(inputs, function(element, index, list) {
-			return element.render();
+			return element.render(tick);
 		}, this);
 	};
 
@@ -259,6 +265,7 @@ var penatonic_hero = {};
 	}, options);
 
 	var $root;
+	var tick_interval;
 
 	// Build HTML ----------------
 
@@ -288,12 +295,15 @@ var penatonic_hero = {};
 	// Render logic ------------------
 	
 	function displayInput(input_data, input_number, list) {
-		
+		console.log(input_number, input_data);
 	}
 
 	function display() {
 		penatonic_hero.tick();
 		_.each(external.display(), displayInput, this);
+		if (external.getTick() >= 10) {
+			clearInterval(tick_interval);
+		}
 	}
 	
 	function getButton(data) {
@@ -313,5 +323,11 @@ var penatonic_hero = {};
 	
 	external.buildHTML = buildHTML;
 	external.generatePlayerHTML = generatePlayerHTML;
+	
+	external.start = function() {
+		buildHTML();
+		clearInterval(tick_interval);
+		tick_interval = setInterval(display, 1000);
+	};
 	
 }(penatonic_hero, {}));
