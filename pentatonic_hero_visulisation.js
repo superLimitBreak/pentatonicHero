@@ -106,7 +106,6 @@ var penatonic_hero = {};
 			displayData = _.filter(displayData, function(element){
 				return !(element.start >= this.options.trackLimit && element.stop >= this.options.trackLimit);
 			}, this);
-			//console.log(displayData);
 			return displayData;
 		},
 
@@ -188,7 +187,7 @@ var penatonic_hero = {};
 
 		render: function(tick) {
 			return _.map(this.buttons, function(element, index, list){
-				element.render(tick);
+				return element.render(tick);
 			}, this);
 		}
 	};
@@ -264,6 +263,8 @@ var penatonic_hero = {};
 		trackLimit: 200,
 	}, options);
 
+	var CONTAINER_CLASS = 'pentatonic_hero';
+	
 	var $root;
 	var tick_interval;
 
@@ -284,7 +285,7 @@ var penatonic_hero = {};
 
 	function buildHTML() {
 		$root = $(options.element_id);
-		$root.addClass('pentatonic_hero'); // This is shit. Have an inner div
+		$root.addClass(CONTAINER_CLASS); // This is shit. Have an inner div
 		$root.empty();
 		
 		_.each(_.range(0, options.inputs), function(element, index, list){
@@ -294,8 +295,27 @@ var penatonic_hero = {};
 
 	// Render logic ------------------
 	
+	function displayTrack($track, track_data) {
+		// Ensure the number of divs in the track match the number of data elements to display
+		_.each(_.range(track_data.length, $track.length), function() {
+			$track.prepend($('div'));
+		});
+		_.each(_.range($track.length, track_data.length), function(element, index, list) {
+			_.last($track.find('div')).remove();
+		});
+		
+		// refresh $track?
+		_.each(track_data, function(element, index, list){
+			//$track.
+		});
+	}
+	
 	function displayInput(input_data, input_number, list) {
-		console.log(input_number, input_data);
+		if (input_number==0) {return;}
+		var $input = $('.'+CONTAINER_CLASS+' .input.input'+input_number);
+		_.each(input_data, function(track_data, index, list){
+			displayTrack($input.find('.button.button'+index), track_data);
+		});
 	}
 
 	function display() {
@@ -326,8 +346,14 @@ var penatonic_hero = {};
 	
 	external.start = function() {
 		buildHTML();
-		clearInterval(tick_interval);
-		tick_interval = setInterval(display, 1000);
+		if (tick_interval != null) {
+			clearInterval(tick_interval);
+		}
+		tick_interval = setInterval(display, 100);
 	};
 	
 }(penatonic_hero, {}));
+
+document.addEventListener("DOMContentLoaded", function() {
+	penatonic_hero.buildHTML();
+});
