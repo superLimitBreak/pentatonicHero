@@ -296,34 +296,53 @@ var penatonic_hero = {};
 	// Render logic ------------------
 	
 	function displayTrack($track, track_data) {
+//console.log('displayTrack', track_data);
 		// Ensure the number of divs in the track match the number of data elements to display
-		_.each(_.range(track_data.length, $track.length), function() {
-			$track.prepend($('div'));
+		_.each(_.range($track.children().length, track_data.length), function() {
+//console.log('add div', $track);
+			$track.prepend($('<div/>'));
+//console.log('added div', $track);
+//clearInterval(tick_interval);
 		});
-		_.each(_.range($track.length, track_data.length), function(element, index, list) {
+//console.log('length', track_data.length, $track.children().length);
+		_.each(_.range(track_data.length, $track.children().length), function(element, index, list) {
+//console.log('divhunt', $track.find('div'));
+//console.log('remove div', $track);
 			_.last($track.find('div')).remove();
 		});
 		
-		// refresh $track?
+		$track = $($track.selector);
+		var unit = $track.innerHeight() / options.trackLimit;
+		function getY(tick) {
+			return (options.trackLimit * unit) - ((options.trackLimit - tick) * unit);
+		}
 		_.each(track_data, function(element, index, list){
-			//$track.
+//console.log('css', track_data, $track);
+			$($track.children()[index]).css({
+				top: ''+getY(element.stop)+'px',
+				bottom: ''+getY(element.start)+'px',
+			});
 		});
+
 	}
 	
 	function displayInput(input_data, input_number, list) {
 		if (input_number==0) {return;}
-		var $input = $('.'+CONTAINER_CLASS+' .input.input'+input_number);
+//console.log('displayInput');
 		_.each(input_data, function(track_data, index, list){
-			displayTrack($input.find('.button.button'+index), track_data);
+			displayTrack(
+				$('.'+CONTAINER_CLASS+' .input.input'+input_number+' .track.button'+index+' .button_track'),
+				track_data
+			);
 		});
 	}
 
 	function display() {
 		penatonic_hero.tick();
 		_.each(external.display(), displayInput, this);
-		if (external.getTick() >= 10) {
-			clearInterval(tick_interval);
-		}
+		//if (external.getTick() >= 10) {
+		//	clearInterval(tick_interval);
+		//}
 	}
 	
 	function getButton(data) {
@@ -349,11 +368,12 @@ var penatonic_hero = {};
 		if (tick_interval != null) {
 			clearInterval(tick_interval);
 		}
-		tick_interval = setInterval(display, 100);
+		tick_interval = setInterval(display, 1000);
 	};
 	
 }(penatonic_hero, {}));
 
 document.addEventListener("DOMContentLoaded", function() {
-	penatonic_hero.buildHTML();
+	//penatonic_hero.buildHTML();
+	penatonic_hero.start();
 });

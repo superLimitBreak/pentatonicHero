@@ -27,7 +27,17 @@
 .pentatonic_hero .input .track .button_track {
     height: 95vh;
     display: inline-block;
+    vertical-align: bottom;
 }
+.pentatonic_hero .input .track .button_track div {
+    display: inline-block;
+    position: absolute;
+    width: 3vw;
+    background-color: red;
+    border: 1px solid #aa0000;
+}
+
+
 .pentatonic_hero .input .track .button {
     height: 5vh;
     display: inline-block;
