@@ -28,13 +28,14 @@
     height: 95vh;
     display: inline-block;
     vertical-align: bottom;
+    position: relative;
 }
 .pentatonic_hero .input .track .button_track div {
     display: inline-block;
     position: absolute;
-    width: 3vw;
-    background-color: red;
-    border: 1px solid #aa0000;
+    /*width: 3vw;*/
+    left: 1vw;
+    right: 1vw;
 }
 
 
@@ -43,39 +44,63 @@
     display: inline-block;
 }
 
+/* Button 0 - Green --------------------------------------------------------- */
 .pentatonic_hero .input .track.button0.button_on .button {
-    background-color: red;
-}
-.pentatonic_hero .input .track.button0.button_on .button_track {
-    background-color: #880000;
-}
-
-.pentatonic_hero .input .track.button1.button_on .button {
-    background-color: yellow;
-}
-.pentatonic_hero .input .track.button1.button_on .button_track {
-    background-color: #888800;
-}
-
-.pentatonic_hero .input .track.button2.button_on .button {
     background-color: green;
 }
-.pentatonic_hero .input .track.button2.button_on .button_track {
-    background-color: #008800;
+.pentatonic_hero .input .track.button0.button_on .button_track {
+    background-color: #88ff88;
+}
+.pentatonic_hero .input .track.button0 .button_track div {
+    background-color: green;
 }
 
+
+/* Button 1 - Red ----------------------------------------------------------- */
+.pentatonic_hero .input .track.button1.button_on .button {
+    background-color: red;
+}
+.pentatonic_hero .input .track.button1.button_on .button_track {
+    background-color: #ff8888;
+}
+.pentatonic_hero .input .track.button1 .button_track div {
+    background-color: red;
+}
+
+
+/* Button 2 - Yellow -------------------------------------------------------- */
+.pentatonic_hero .input .track.button2.button_on .button {
+    background-color: yellow;
+}
+.pentatonic_hero .input .track.button2.button_on .button_track {
+    background-color: #888844;
+}
+.pentatonic_hero .input .track.button2 .button_track div {
+    background-color: yellow;
+}
+
+
+/* Button 3 - Blue ---------------------------------------------------------- */
 .pentatonic_hero .input .track.button3.button_on .button {
     background-color: blue;
 }
 .pentatonic_hero .input .track.button3.button_on .button_track {
-    background-color: #000088;
+    background-color: #8888ff;
+}
+.pentatonic_hero .input .track.button3 .button_track div {
+    background-color: blue;
 }
 
+
+/* Button 4 - Orange -------------------------------------------------------- */
 .pentatonic_hero .input .track.button4.button_on .button {
     background-color: orange;
 }
 .pentatonic_hero .input .track.button4.button_on .button_track {
     background-color: #888888;
+}
+.pentatonic_hero .input .track.button4 .button_track div {
+    background-color: orange;
 }
 
 

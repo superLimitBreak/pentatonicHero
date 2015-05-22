@@ -91,15 +91,12 @@ var penatonic_hero = {};
 			_.each(this.data, function(element, index, list) {
 				var previous = _.last(displayData);
 				if (!element.isDown && previous && !previous.start) {
-//console.log('start', tick - element.tick);
 					previous.start = tick - element.tick;
 					return;
 				}
 				if (element.isDown) {
-					var stop = Math.min(tick - element.tick, this.options.trackLimit);
-//console.log('stop', stop);
 					displayData.push({
-						stop: stop,
+						stop: Math.min(tick - element.tick, this.options.trackLimit),
 						start: 0,
 					});
 					return;
@@ -299,18 +296,11 @@ var penatonic_hero = {};
 	// Render logic ------------------
 	
 	function displayTrack($track, track_data) {
-//console.log('displayTrack', track_data);
 		// Ensure the number of divs in the track match the number of data elements to display
 		_.each(_.range($track.children().length, track_data.length), function() {
-//console.log('add div', $track);
 			$track.prepend($('<div/>'));
-//console.log('added div', $track);
-//clearInterval(tick_interval);
 		});
-//console.log('length', track_data.length, $track.children().length);
 		_.each(_.range(track_data.length, $track.children().length), function(element, index, list) {
-//console.log('divhunt', $track.find('div'));
-//console.log('remove div', $track);
 			_.last($track.find('div')).remove();
 		});
 		
@@ -320,7 +310,6 @@ var penatonic_hero = {};
 			return (options.trackLimit * unit) - ((options.trackLimit - tick) * unit);
 		}
 		_.each(track_data, function(element, index, list){
-//console.log('css', track_data, $track);
 			$($track.children()[index]).css({
 				height: ''+getY(element.stop)-getY(element.start)+'px',
 				bottom: ''+getY(element.start)+'px',
@@ -331,7 +320,6 @@ var penatonic_hero = {};
 	
 	function displayInput(input_data, input_number, list) {
 		if (input_number==0) {return;}
-//console.log('displayInput');
 		_.each(input_data, function(track_data, index, list){
 			displayTrack(
 				$('.'+CONTAINER_CLASS+' .input.input'+input_number+' .track.button'+index+' .button_track'),
@@ -343,9 +331,6 @@ var penatonic_hero = {};
 	function display() {
 		penatonic_hero.tick();
 		_.each(external.display(), displayInput, this);
-		//if (external.getTick() >= 10) {
-		//	clearInterval(tick_interval);
-		//}
 		window.requestAnimationFrame(display);
 	}
 	
