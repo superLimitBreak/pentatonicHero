@@ -91,12 +91,15 @@ var penatonic_hero = {};
 			_.each(this.data, function(element, index, list) {
 				var previous = _.last(displayData);
 				if (!element.isDown && previous && !previous.start) {
+//console.log('start', tick - element.tick);
 					previous.start = tick - element.tick;
 					return;
 				}
 				if (element.isDown) {
+					var stop = Math.min(tick - element.tick, this.options.trackLimit);
+//console.log('stop', stop);
 					displayData.push({
-						stop: Math.min(tick - element.tick, this.options.trackLimit),
+						stop: stop,
 						start: 0,
 					});
 					return;
@@ -319,7 +322,7 @@ var penatonic_hero = {};
 		_.each(track_data, function(element, index, list){
 //console.log('css', track_data, $track);
 			$($track.children()[index]).css({
-				top: ''+getY(element.stop)+'px',
+				height: ''+getY(element.stop)-getY(element.start)+'px',
 				bottom: ''+getY(element.start)+'px',
 			});
 		});
@@ -343,6 +346,7 @@ var penatonic_hero = {};
 		//if (external.getTick() >= 10) {
 		//	clearInterval(tick_interval);
 		//}
+		window.requestAnimationFrame(display);
 	}
 	
 	function getButton(data) {
@@ -365,13 +369,16 @@ var penatonic_hero = {};
 	
 	external.start = function() {
 		buildHTML();
-		if (tick_interval != null) {
-			clearInterval(tick_interval);
-		}
-		tick_interval = setInterval(display, 1000);
+		//if (tick_interval != null) {
+		//	clearInterval(tick_interval);
+		//}
+		//tick_interval = setInterval(display, 100);
+		window.requestAnimationFrame(display);
 	};
 	
 }(penatonic_hero, {}));
+
+window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 
 document.addEventListener("DOMContentLoaded", function() {
 	//penatonic_hero.buildHTML();
