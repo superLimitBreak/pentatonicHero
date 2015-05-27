@@ -5,10 +5,10 @@ import operator
 from collections import namedtuple
 from functools import partial
 
-from music import note_to_text, parse_note, SCALES
-from pygame_midi_wrapper import PygameMidiDeviceHelper
-from pygame_midi_output import PygameMidiOutputWrapper
-from network_display_event import DisplayEventHandler, DisplayEventHandlerNull
+from libs.music import note_to_text, parse_note, SCALES
+from libs.pygame_midi_wrapper import PygameMidiDeviceHelper
+from libs.pygame_midi_output import PygameMidiOutputWrapper
+from libs.network_display_event import DisplayEventHandler, DisplayEventHandlerNull
 import controls
 
 import logging
