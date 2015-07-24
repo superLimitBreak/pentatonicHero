@@ -28,7 +28,8 @@ DEFAULT_SCALE = 'pentatonic_minor'
 DEFAULT_HAMMER_DECAY = -0.01
 DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 50
 DEFAULT_NOTE_LIMIT = (parse_note('C1'), parse_note('C#5'))
-DEFAULT_DISPLAY_EVENT_FUNCTION_NAME = 'pentatonic_hero.event'
+EVENT_DISPLAY_FUNCTION_NAME = 'pentatonic_hero.event'
+EVENT_CONTROL_MUTE_FUNCTION_NAME = 'pentatonic_hero.control.mute'
 
 now = lambda: datetime.datetime.now()
 
@@ -52,6 +53,7 @@ class HeroInput(object):
         **kwargs
     ):
         HeroInput.input_identifyer += 1
+        self.input_identifyer = HeroInput.input_identifyer
 
         self.input_event_processor = input_event_processor
 
@@ -63,8 +65,8 @@ class HeroInput(object):
 
         def display_event(event, **kwargs):
             kwargs['event'] = event
-            kwargs['input'] = HeroInput.input_identifyer
-            kwargs['func'] = DEFAULT_DISPLAY_EVENT_FUNCTION_NAME
+            kwargs['input'] = self.input_identifyer
+            kwargs['func'] = EVENT_DISPLAY_FUNCTION_NAME
             display.event(kwargs)
         self.display_event = display_event
 
@@ -186,9 +188,15 @@ class HeroInput(object):
 
     # Events -------------------------------------
 
-    def toggle_mute(self):
-        self.mute = not self.mute
-        log.info('mute: {0}'.format(self.mute))
+    def set_mute_state(self, mute=None):
+        """
+        If no state passed this will toggle the mute state
+        """
+        if mute == None:
+            self.mute = not self.mute
+        else:
+            self.mute = mute
+        log.info('input{0} mute: {1}'.format(self.input_identifyer, self.mute))
         if self.mute:
             self._send_note_off()
 
@@ -274,7 +282,7 @@ class App:
         self.midi_out = PygameMidiDeviceHelper.open_device(options.midi_port_name)
 
         # Network display reporting
-        self.display = DisplayEventHandler.factory(*options.display_host.split(':'))
+        self.display = DisplayEventHandler.factory(*options.display_host.split(':'), recive_func=self.control_command)
 
         self.players = {
             'player1': HeroInput(
@@ -299,9 +307,9 @@ class App:
                 self.quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F1:
-                    self.players['player1'].toggle_mute()
+                    self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player1'})
                 if event.key == pygame.K_F2:
-                    self.players['player2'].toggle_mute()
+                    self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player2'})
             try:
                 if event.axis != 3:  # The PS3 controler has a touch sensetive pad that constantly spams the logs with axis results
                     log.debug(event)
@@ -311,6 +319,10 @@ class App:
                 player.update_state(event)
         for player in self.players.values():
             player.process_state()
+
+    def control_command(self, data):
+        if data and data.get('func') == EVENT_CONTROL_MUTE_FUNCTION_NAME:
+            self.players[data.get('input')].set_mute_state(data.get('mute'))
 
     def run(self):
         while self.running:
