@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 # Contants ---------------------------------------------------------------------
 
-VERSION = '0.3'
+VERSION = '0.31'
 
 TITLE = 'Pentatonic Hero'
 
@@ -64,7 +64,8 @@ class HeroInput(object):
         def display_event(event, **kwargs):
             kwargs['event'] = event
             kwargs['input'] = HeroInput.input_identifyer
-            display.event(DEFAULT_DISPLAY_EVENT_FUNCTION_NAME, **kwargs)
+            kwargs['func'] = DEFAULT_DISPLAY_EVENT_FUNCTION_NAME
+            display.event(kwargs)
         self.display_event = display_event
 
         self.hammer_decay = hammer_decay

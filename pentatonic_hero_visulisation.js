@@ -365,7 +365,6 @@ var penatonic_hero = {};
 
 window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 
-document.addEventListener("DOMContentLoaded", function() {
-	//penatonic_hero.buildHTML();
-	penatonic_hero.start();
-});
+//document.addEventListener("DOMContentLoaded", function() {
+//	penatonic_hero.start();
+//});
