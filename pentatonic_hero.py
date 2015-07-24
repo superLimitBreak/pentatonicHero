@@ -28,7 +28,7 @@ DEFAULT_SCALE = 'pentatonic_minor'
 DEFAULT_HAMMER_DECAY = -0.01
 DEFAULT_HAMMER_STRUM_BLOCK_DELAY = 50
 DEFAULT_NOTE_LIMIT = (parse_note('C1'), parse_note('C#5'))
-DEFAULT_DISPLAY_EVENT_FUNCTION_NAME = 'penatonic_hero.event'
+DEFAULT_DISPLAY_EVENT_FUNCTION_NAME = 'pentatonic_hero.event'
 
 now = lambda: datetime.datetime.now()
 

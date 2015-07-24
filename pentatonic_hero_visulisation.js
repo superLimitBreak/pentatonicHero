@@ -1,4 +1,4 @@
-var penatonic_hero = {};
+var pentatonic_hero = {};
 
 //------------------------------------------------------------------------------
 // Model
@@ -247,7 +247,7 @@ var penatonic_hero = {};
 		}, this);
 	};
 
-}(penatonic_hero, {}));
+}(pentatonic_hero, {}));
 
 
 
@@ -329,7 +329,7 @@ var penatonic_hero = {};
 	}
 
 	function display() {
-		penatonic_hero.tick();
+		pentatonic_hero.tick();
 		_.each(external.display(), displayInput, this);
 		window.requestAnimationFrame(display);
 	}
@@ -361,10 +361,10 @@ var penatonic_hero = {};
 		window.requestAnimationFrame(display);
 	};
 	
-}(penatonic_hero, {}));
+}(pentatonic_hero, {}));
 
 window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 
 //document.addEventListener("DOMContentLoaded", function() {
-//	penatonic_hero.start();
+//	pentatonic_hero.start();
 //});

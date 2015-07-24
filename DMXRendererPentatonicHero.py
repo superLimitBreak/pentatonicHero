@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class DMXRendererPentatonicHero(AbstractDMXRenderer):
 
-    __name__ = 'penatonic_hero'
+    __name__ = 'pentatonic_hero'
 
     def __init__(self):
         super().__init__()
