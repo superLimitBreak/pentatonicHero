@@ -268,6 +268,8 @@ var pentatonic_hero = {};
 	var $root;
 	var tick_interval;
 
+	var running = false;
+	
 	// Build HTML ----------------
 
 	function generatePlayerHTML(input_number) {
@@ -329,6 +331,7 @@ var pentatonic_hero = {};
 	}
 
 	function display() {
+		if (!running) {return;}
 		pentatonic_hero.tick();
 		_.each(external.display(), displayInput, this);
 		window.requestAnimationFrame(display);
@@ -338,6 +341,26 @@ var pentatonic_hero = {};
 		return $root.find('.input'+data.input + ' .button'+data.button);
 	}
 	
+	function start() {
+		if (running) {return;}
+		running = true;
+		buildHTML();
+		//if (tick_interval != null) {
+		//	clearInterval(tick_interval);
+		//}
+		//tick_interval = setInterval(display, 100);
+		window.requestAnimationFrame(display);
+	}
+	
+	function stop() {
+		running = false;
+	}
+	
+	// EventBus ----------------------------------------------------------------
+	$.subscribe('trigger.stop', stop);
+
+	// External ----------------------------------------------------------------
+
 	_.extend(external.event_handlers, {
 		button_down: function(data) {
 			getButton(data).addClass('button_on');
@@ -347,19 +370,11 @@ var pentatonic_hero = {};
 		},
 	});
 	
-	// External ----------------------------------------------------------------
+	_.extend(external, {
+		start: start,
+		stop: stop,
+	});
 	
-	external.buildHTML = buildHTML;
-	external.generatePlayerHTML = generatePlayerHTML;
-	
-	external.start = function() {
-		buildHTML();
-		//if (tick_interval != null) {
-		//	clearInterval(tick_interval);
-		//}
-		//tick_interval = setInterval(display, 100);
-		window.requestAnimationFrame(display);
-	};
 	
 }(pentatonic_hero, {}));
 
