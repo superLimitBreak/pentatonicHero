@@ -321,7 +321,6 @@ var pentatonic_hero = {};
 	}
 	
 	function displayInput(input_data, input_number, list) {
-		if (input_number==0) {return;}
 		_.each(input_data, function(track_data, index, list){
 			displayTrack(
 				$('.'+CONTAINER_CLASS+' .input.input'+input_number+' .track.button'+index+' .button_track'),
