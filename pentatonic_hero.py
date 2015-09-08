@@ -321,7 +321,15 @@ class App:
             player.process_state()
 
     def control_command(self, data):
-        if data and data.get('func') == EVENT_CONTROL_MUTE_FUNCTION_NAME:
+        # Not happy here.
+        # PentatonicHero does not use run_funcs from misc.py as this was added after PentatonicHeros development
+        # The data spec changed to allow 'lists' of commands that could be processed in batchs
+        # I would not like to manually handle this here and would like to bring PentatonicHero in line
+        # with the way other python programs are using the event processor
+        if isinstance(data, list):
+            for item in data:
+                self.control_command(item)
+        elif isinstance(data, dict) and data.get('func') == EVENT_CONTROL_MUTE_FUNCTION_NAME:
             self.players[data.get('input')].set_mute_state(data.get('mute'))
 
     def run(self):
