@@ -44,10 +44,20 @@ libs/network_display_event.py: libs
 	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/net/network_display_event.py --compressed -O
 libs/pygame_midi_wrapper.py: libs
 	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_wrapper.py --compressed -O
+libs/pygame_midi_input.py: libs
+	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_input.py --compressed -O
 libs/pygame_midi_output.py: libs
 	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_output.py --compressed -O
 libs/music.py: libs
 	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/music.py --compressed -O
+
+python_libs_local_link: libs
+	# Link local libs; use when all the required repos are checked out locally
+	ln -s ../libs/python3/lib/net/network_display_event.py ./libs/network_display_event.py
+	ln -s ../libs/python3/lib/midi/pygame_midi_wrapper.py ./libs/pygame_midi_wrapper.py
+	ln -s ../libs/python3/lib/midi/pygame_midi_input.py ./libs/pygame_midi_input.py
+	ln -s ../libs/python3/lib/midi/pygame_midi_output.py ./libs/pygame_midi_output.py
+	ln -s ../libs/python3/lib/midi/music.py ./libs/music.py
 
 
 # Run --------------------------------------------------------------------------
