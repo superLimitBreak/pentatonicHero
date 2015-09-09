@@ -266,8 +266,12 @@ class App:
     def __init__(self, options):
         pygame.init()
         pygame.display.set_caption(TITLE)
+        pygame.event.set_blocked(pygame.MOUSEMOTION)
 
-        self.clock = pygame.time.Clock()
+        #self.clock = pygame.time.Clock()
+        pygame.fastevent.init()
+        self.wait_input = pygame.fastevent.wait
+        #self.wait_input = pygame.event.wait
 
         # Init joysticks
         pygame.joystick.init()
@@ -299,24 +303,28 @@ class App:
             ),
         }
 
-        self.running = True
+    def process_events(self, events=None):
+        if events == None:
+            events = self.event_get()
+        for event in events:
+            self.process_event(event)
 
-    def _loop(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                self.quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F1:
-                    self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player1'})
-                if event.key == pygame.K_F2:
-                    self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player2'})
-            try:
-                if event.axis != 3:  # The PS3 controler has a touch sensetive pad that constantly spams the logs with axis results
-                    log.debug(event)
-            except:
+    def process_event (self, event):
+        if self.running and (event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
+            self.quit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F1:
+                self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player1'})
+            if event.key == pygame.K_F2:
+                self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player2'})
+        try:
+            if event.axis != 3:  # The PS3 controler has a touch sensetive pad that constantly spams the logs with axis results
                 log.debug(event)
-            for player in self.players.values():
-                player.update_state(event)
+        except:
+            log.debug(event)
+
+        for player in self.players.values():
+            player.update_state(event)
         for player in self.players.values():
             player.process_state()
 
@@ -333,9 +341,23 @@ class App:
             self.players[data.get('input')].set_mute_state(data.get('mute'))
 
     def run(self):
-        while self.running:
-            self.clock.tick(100)
-            self._loop()
+        try:
+            self.running = True
+            while self.running:
+                #self.process_events()
+                self.process_event(self.wait_input())
+        except KeyboardInterrupt:
+            self.running = False
+        self.close()
+
+    #def run(self):
+    #    self.running = True
+    #    while self.running:
+    #        self.clock.tick(100)
+    #        self._loop()
+    #    self.close()
+            
+    def close(self):    
         if self.midi_out:
             self.midi_out.close()
         if self.display:
