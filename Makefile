@@ -12,7 +12,7 @@ help:
 
 # Installation -----------------------------------------------------------------
 .PHONY: install
-install: $(OS) libs/network_display_event.py libs/pygame_midi_wrapper.py libs/music.py
+install: $(OS) libs/network_display_event.py libs/pygame_midi_wrapper.py libs/pygame_midi_output.py libs/music.py
 
 # OSX installation
 .PHONY: Darwin has-brew
