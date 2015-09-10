@@ -3,7 +3,6 @@ import pygame
 import datetime
 import operator
 from collections import namedtuple
-from functools import partial
 
 from libs.music import note_to_text, parse_note, SCALES
 from libs.pygame_midi_wrapper import PygameMidiDeviceHelper
@@ -16,7 +15,7 @@ log = logging.getLogger(__name__)
 
 # Contants ---------------------------------------------------------------------
 
-VERSION = '0.31'
+VERSION = '0.33'
 
 TITLE = 'Pentatonic Hero'
 
@@ -39,6 +38,7 @@ NoteLimit = namedtuple('NoteLimit', ['lower', 'upper'])
 
 
 class HeroInput(object):
+    NUMBER_OF_BUTTONS = 5
 
     input_identifyer = 0
 
@@ -75,7 +75,7 @@ class HeroInput(object):
         self.hammer_strum_block_delay = datetime.timedelta(microseconds=hammer_strum_block_delay * 1000)
         self.note_limit = note_limit
 
-        self.button_states = [False] * 5  # TODO: remove hard coded magic number for buttons
+        self.button_states = [False] * self.NUMBER_OF_BUTTONS
         self.playing_power = 0
         self.previous_note = 0
         self.previous_note_timestamp = now()
@@ -141,7 +141,7 @@ class HeroInput(object):
            (proposed_scale_index_offset <= self.scale_index_offset_limit.upper):
             self.scale_index_offset = proposed_scale_index_offset
             log.info('scale transpose: {0}'.format(offset))
-            self.display_event('transpose', notes=[note_to_text(self.get_midi_note(i)) for i, v in enumerate(self.button_states)])
+            self.display_event('transpose', notes=[note_to_text(self.get_midi_note(i)) for i, _ in enumerate(self.button_states)])
         else:
             log.info('scale transpose: restricted with limit')
 
@@ -220,13 +220,14 @@ class HeroInput(object):
         if self.playing_power > 0:
             current_note = self.current_midi_note
             # Do not play a strum if the note has not chaged since a recent hammer on
-            if \
-                self.hammer_strum_block_delay and \
-                self.playing_power >= 1 and \
-                self.previous_note == current_note and \
-                now() - self.previous_note_timestamp < self.hammer_strum_block_delay:
-                    log.debug('hammer_strum_block_delay')
-                    self.playing_power += self.hammer_decay
+            if (
+                self.hammer_strum_block_delay and
+                self.playing_power >= 1 and
+                self.previous_note == current_note and
+                now() - self.previous_note_timestamp < self.hammer_strum_block_delay
+            ):
+                log.debug('hammer_strum_block_delay')
+                self.playing_power += self.hammer_decay
             # Play if note changed or strum
             elif current_note != self.previous_note or self.playing_power >= 1:
                 self._send_note(current_note)
@@ -255,8 +256,6 @@ class HeroInput(object):
             self.previous_note = None
 
     def _send_pitch_bend(self, pitch):
-        """
-        """
         if not self.mute:
             self.midi_output.pitch(pitch)
 
@@ -277,8 +276,7 @@ class App:
         # Init joysticks
         pygame.joystick.init()
         self.joysticks = {}
-        for i in range(0, pygame.joystick.get_count()):
-            joystick = pygame.joystick.Joystick(i)
+        for joystick in map(pygame.joystick.Joystick, range(0, pygame.joystick.get_count())):
             self.joysticks[joystick.get_name()] = joystick
             joystick.init()
 
@@ -306,11 +304,11 @@ class App:
 
     def process_events(self, events=None):
         if events == None:
-            events = self.event_get()
+            return  # events = self.event_get()
         for event in events:
             self.process_event(event)
 
-    def process_event (self, event):
+    def process_event(self, event):
         if self.running and (event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)):
             self.quit()
         if event.type == pygame.KEYDOWN:
@@ -321,7 +319,7 @@ class App:
         try:
             if event.axis != 3:  # The PS3 controler has a touch sensetive pad that constantly spams the logs with axis results
                 log.debug(event)
-        except:
+        except Exception:
             log.debug(event)
 
         for player in self.players.values():
@@ -351,14 +349,7 @@ class App:
             self.running = False
         self.close()
 
-    #def run(self):
-    #    self.running = True
-    #    while self.running:
-    #        self.clock.tick(100)
-    #        self._loop()
-    #    self.close()
-            
-    def close(self):    
+    def close(self):
         if self.midi_out:
             self.midi_out.close()
         if self.display:

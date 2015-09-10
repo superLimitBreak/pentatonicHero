@@ -58,9 +58,12 @@ python_libs_local_link: libs
 
 
 # Run --------------------------------------------------------------------------
-.PHONY: run test
+.PHONY: run run_production test
 run:
 	python3 pentatonic_hero.py
+
+run_production:
+	python3 pentatonic_hero.py --input_profile ps3_joy1 --input_profile2 ps3_joy2
 
 test:
 	python3 -m doctest -v *.py
