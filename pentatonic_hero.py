@@ -192,13 +192,13 @@ class HeroInput(object):
         """
         If no state passed this will toggle the mute state
         """
-        if mute == None:
-            self.mute = not self.mute
-        else:
-            self.mute = mute
-        log.info('input{0} mute: {1}'.format(self.input_identifyer, self.mute))
-        if self.mute:
+        if mute is None:
+            mute = not self.mute  # Toggle exisiting state if no state provided
+        log.info('input{0} mute: {1}'.format(self.input_identifyer, mute))
+        if mute:
             self._send_note_off()
+            self._send_pitch_bend(0)
+        self.mute = mute
 
     def update_state(self, event):
         """
@@ -249,7 +249,7 @@ class HeroInput(object):
                 self.previous_note_timestamp = now()
 
     def _send_note_off(self):
-        if self.previous_note:
+        if self.previous_note and not self.mute:
             self.midi_output.note(self.previous_note, velocity=0)
             self.display_event('note_off', value=self.previous_note)
             self.previous_note = None
@@ -257,7 +257,8 @@ class HeroInput(object):
     def _send_pitch_bend(self, pitch):
         """
         """
-        self.midi_output.pitch(pitch)
+        if not self.mute:
+            self.midi_output.pitch(pitch)
 
 
 # Pygame -----------------------------------------------------------------------
