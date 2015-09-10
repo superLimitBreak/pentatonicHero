@@ -184,8 +184,6 @@ class HeroInput(object):
             self.display_event('strum', value=1 if value >= 0 else -1)
 
     def ctrl_pitch_bend(self, value):
-        if value > 1:
-            value = -1 # Fix for ps3joystick corrupt values
         self.pitch_bend = value
 
     # Events -------------------------------------

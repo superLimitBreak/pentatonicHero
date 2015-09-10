@@ -38,7 +38,10 @@ def _ps3_joy(joystick_number):
             return
         # Pitch
         if event.type == pygame.JOYAXISMOTION and event.axis == pitch_bend_axis:
-            control_methods['pitch_bend'](-event.value)
+            value = -event.value
+            if value > 1:
+                value = -1  # Fix for corrupt values
+            control_methods['pitch_bend'](value)
             return
     return input_event_processor
 
