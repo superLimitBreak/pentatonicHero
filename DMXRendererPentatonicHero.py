@@ -16,7 +16,7 @@ COLORS = {
     'orange': (255, 30, 0),
     'black': (0, 0, 0),
 }
-BUTTON_COLORS = tuple(COLORS[color] for color in ('red', 'green', 'yellow', 'blue', 'orange'))
+BUTTON_COLORS = tuple(COLORS[color] for color in ('green', 'red', 'yellow', 'blue', 'orange'))
 LIGHT_INDEX = [0, 8, 16, 24, 32, 40, 48, 56, 64]
 LIGHT_CONFIG = {
     1: [0, 16, 8],  # floor 2 - 77, 80, 83
