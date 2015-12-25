@@ -285,7 +285,7 @@ class App:
         self.midi_out = PygameMidiDeviceHelper.open_device(options.midi_port_name)
 
         # Network display reporting
-        self.display = SubscriptionClient.factory(*options.display_host.split(':'))
+        self.display = SubscriptionClient(*options.display_host.split(':'), subscriptions=(EVENT_CONTROL_MUTE_FUNCTION_NAME,))
         self.display.recive_message = self.control_command
 
         self.players = {
