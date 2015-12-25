@@ -12,7 +12,7 @@ help:
 
 # Installation -----------------------------------------------------------------
 .PHONY: install
-install: $(OS) libs/network_display_event.py libs/pygame_midi_wrapper.py libs/pygame_midi_output.py libs/music.py
+install: $(OS) libs/client_reconnect.py libs/pygame_midi_wrapper.py libs/pygame_midi_output.py libs/music.py
 
 # OSX installation
 .PHONY: Darwin has-brew
@@ -40,8 +40,8 @@ apt-installation:
 libs:
 	mkdir libs
 	touch __init__.py
-libs/network_display_event.py: libs
-	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/net/network_display_event.py --compressed -O
+libs/client_reconnect.py: libs
+	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/net/client_reconnect.py --compressed -O
 libs/pygame_midi_wrapper.py: libs
 	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_wrapper.py --compressed -O
 libs/pygame_midi_output.py: libs
@@ -51,10 +51,10 @@ libs/music.py: libs
 
 python_libs_local_link: libs
 	# Link local libs; use when all the required repos are checked out locally
-	ln -s ../libs/python3/lib/net/network_display_event.py ./libs/network_display_event.py
-	ln -s ../libs/python3/lib/midi/pygame_midi_wrapper.py ./libs/pygame_midi_wrapper.py
-	ln -s ../libs/python3/lib/midi/pygame_midi_output.py ./libs/pygame_midi_output.py
-	ln -s ../libs/python3/lib/midi/music.py ./libs/music.py
+	ln -s ../../libs/python3/lib/net/client_reconnect.py ./libs/client_reconnect.py
+	ln -s ../../libs/python3/lib/midi/pygame_midi_wrapper.py ./libs/pygame_midi_wrapper.py
+	ln -s ../../libs/python3/lib/midi/pygame_midi_output.py ./libs/pygame_midi_output.py
+	ln -s ../../libs/python3/lib/midi/music.py ./libs/music.py
 
 
 # Run --------------------------------------------------------------------------

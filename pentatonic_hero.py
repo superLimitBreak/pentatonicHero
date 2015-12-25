@@ -7,7 +7,7 @@ from collections import namedtuple
 from libs.music import note_to_text, parse_note, SCALES
 from libs.pygame_midi_wrapper import PygameMidiDeviceHelper
 from libs.pygame_midi_output import PygameMidiOutputWrapper
-from libs.network_display_event import DisplayEventHandler, DisplayEventHandlerNull
+from libs.client_reconnect import SubscriptionClient, SocketReconnectNull
 import controls
 
 import logging
@@ -43,7 +43,7 @@ class HeroInput(object):
     input_identifyer = 0
 
     def __init__(self, input_event_processor, midi_output,
-        display=DisplayEventHandlerNull(),
+        display=SocketReconnectNull(),
         root_note=parse_note(DEFAULT_ROOT_NOTE),
         scale=SCALES[DEFAULT_SCALE],
         hammer_ons=True,
@@ -67,7 +67,7 @@ class HeroInput(object):
             kwargs['event'] = event
             kwargs['input'] = self.input_identifyer
             kwargs['func'] = EVENT_DISPLAY_FUNCTION_NAME
-            display.event(kwargs)
+            display.send_message(kwargs)
         self.display_event = display_event
 
         self.hammer_decay = hammer_decay
@@ -285,7 +285,8 @@ class App:
         self.midi_out = PygameMidiDeviceHelper.open_device(options.midi_port_name)
 
         # Network display reporting
-        self.display = DisplayEventHandler.factory(*options.display_host.split(':'), recive_func=self.control_command)
+        self.display = SubscriptionClient.factory(*options.display_host.split(':'))
+        self.display.recive_message = self.control_command
 
         self.players = {
             'player1': HeroInput(
@@ -313,9 +314,9 @@ class App:
             self.quit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F1:
-                self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player1'})
+                self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input': 'player1'})
             if event.key == pygame.K_F2:
-                self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input':'player2'})
+                self.control_command({'func': EVENT_CONTROL_MUTE_FUNCTION_NAME, 'input': 'player2'})
         try:
             if event.axis != 3:  # The PS3 controler has a touch sensetive pad that constantly spams the logs with axis results
                 log.debug(event)
