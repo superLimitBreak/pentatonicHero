@@ -12,7 +12,7 @@ help:
 
 # Installation -----------------------------------------------------------------
 .PHONY: install
-install: $(OS) libs/client_reconnect.py libs/pygame_midi_wrapper.py libs/pygame_midi_output.py libs/music.py
+install: $(OS) libs
 
 # OSX installation
 .PHONY: Darwin has-brew
@@ -37,24 +37,22 @@ apt-installation:
 	#hg clone https://bitbucket.org/pygame/pygame
 	#cd pygame ; python3 setup.py build ; sudo python3 setup.py install
 
+
 libs:
 	mkdir libs
-	touch __init__.py
-libs/client_reconnect.py: libs
-	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/net/client_reconnect.py --compressed -O
-libs/pygame_midi_wrapper.py: libs
-	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_wrapper.py --compressed -O
-libs/pygame_midi_output.py: libs
-	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_output.py --compressed -O
-libs/music.py: libs
-	cd libs && curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/music.py --compressed -O
-
-python_libs_local_link: libs
-	# Link local libs; use when all the required repos are checked out locally
-	ln -s ../../libs/python3/lib/net/client_reconnect.py ./libs/client_reconnect.py
-	ln -s ../../libs/python3/lib/midi/pygame_midi_wrapper.py ./libs/pygame_midi_wrapper.py
-	ln -s ../../libs/python3/lib/midi/pygame_midi_output.py ./libs/pygame_midi_output.py
-	ln -s ../../libs/python3/lib/midi/music.py ./libs/music.py
+	touch libs/__init__.py
+	cd libs && \
+	if [ -d ../libs/ ] ; then \
+		ln -s ../../libs/python3/lib/net/client_reconnect.py client_reconnect.py ;\
+		ln -s ../../libs/python3/lib/midi/pygame_midi_wrapper.py pygame_midi_wrapper.py ;\
+		ln -s ../../libs/python3/lib/midi/pygame_midi_output.py pygame_midi_output.py ;\
+		ln -s ../../libs/python3/lib/midi/music.py music.py ;\
+	else \
+		curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/net/client_reconnect.py      --compressed -O ;\
+		curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_wrapper.py  --compressed -O ;\
+		curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/pygame_midi_output.py    --compressed -O ;\
+		curl https://raw.githubusercontent.com/calaldees/libs/master/python3/lib/midi/music.py                --compressed -O ;\
+	fi
 
 
 # Run --------------------------------------------------------------------------
