@@ -57,7 +57,7 @@ libs:
 
 # Run --------------------------------------------------------------------------
 .PHONY: run run_production test
-run:
+run: libs
 	python3 pentatonic_hero.py
 
 run_production:
@@ -66,3 +66,9 @@ run_production:
 test:
 	python3 -m doctest -v *.py
 
+
+# Clean ------------------------------------------------------------------------
+
+PHONY: clean
+clean:
+	rm -rf libs

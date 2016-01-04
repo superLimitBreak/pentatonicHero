@@ -2,7 +2,7 @@
 Plugin for use with 'lighting-automation' project
 """
 
-from DMXBase import AbstractDMXRenderer
+from lighting import AbstractDMXRenderer
 
 import logging
 log = logging.getLogger(__name__)
